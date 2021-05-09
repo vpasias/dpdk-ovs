@@ -106,7 +106,26 @@ sudo systemctl start ovs-vswitchd
 #### Cleanup
 rm -rf /home/vagrant/openvswitch-2.9.2.tar.gz /home/vagrant/dpdk-17.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
 
+sudo systemctl start ovsdb-server
+sudo systemctl start ovs-vswitchd
 
+sudo systemctl status ovsdb-server
+sudo systemctl status ovs-vswitchd
+sudo lshw -class network -businfo
+
+sudo ovs-vsctl --no-wait init
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="1024"
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=0x2
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
+
+# userspace datapath with dpdk
+sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=netdev
+sudo ovs-vsctl add-port br0 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0 
+
+# kernel datapath
+sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=system
+sudo ovs-vsctl show
 SCRIPT
 
 Vagrant.configure("2") do |config|
@@ -115,14 +134,14 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
   config.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
   config.vm.provision "shell", privileged: false, inline: $script
-  config.vm.network "private_network", ip: "192.168.200.100"
+  config.vm.network "private_network", ip: "192.168.200.100", virtualbox_intnet: "net1"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   # This option is needed otherwise the Intel DPDK takes over the entire adapter
   config.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--cpus", 2]
-      v.customize ["modifyvm", :id, "--memory", 4096]
+      v.customize ["modifyvm", :id, "--memory", 8192]
       v.customize ["modifyvm", :id, "--chipset", "ich9"]
       v.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
       v.customize ['modifyvm', :id, '--nictype2', '82545EM']
