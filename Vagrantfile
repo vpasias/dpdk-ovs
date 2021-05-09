@@ -6,6 +6,7 @@
 # 2.7.x         16.11.6
 # 2.8.x         17.05.2
 # 2.9.x         17.11.2
+# 2.14.x        19.11.2
 
 $script = <<SCRIPT
 set -e -x -u
@@ -23,7 +24,7 @@ sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
 export NET_IF_NAME=enp0s8
 
 sudo apt-get -qq update
-sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev inux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
+sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
 sudo pip install six
 
 #### Install Golang
@@ -43,21 +44,21 @@ sudo apt-get -qq update
 sudo apt-get -qq install -y docker-ce
 
 #### Download DPDK, Open vSwitch and pktgen source
-wget --quiet https://fast.dpdk.org/rel/dpdk-17.11.2.tar.xz
-sudo tar xf dpdk-17.11.2.tar.xz -C /usr/src/
+wget --quiet https://fast.dpdk.org/rel/dpdk-19.11.2.tar.xz
+sudo tar xf dpdk-19.11.2.tar.xz -C /usr/src/
 
-wget --quiet http://openvswitch.org/releases/openvswitch-2.9.2.tar.gz
-sudo tar -zxf openvswitch-2.9.2.tar.gz -C /usr/src/
+wget --quiet http://openvswitch.org/releases/openvswitch-2.14.2.tar.gz
+sudo tar -zxf openvswitch-2.14.2.tar.gz -C /usr/src/
 
 wget --quiet http://www.dpdk.org/browse/apps/pktgen-dpdk/snapshot/pktgen-3.4.9.tar.gz
 sudo tar -zxf pktgen-3.4.9.tar.gz -C /usr/src/
 
 #### Install DPDK
-echo 'export DPDK_DIR=/usr/src/dpdk-stable-17.11.2' | sudo tee -a /root/.bashrc
+echo 'export DPDK_DIR=/usr/src/dpdk-stable-19.11.2' | sudo tee -a /root/.bashrc
 echo 'export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib' | sudo tee -a /root/.bashrc
 echo 'export DPDK_TARGET=x86_64-native-linuxapp-gcc' | sudo tee -a /root/.bashrc
 echo 'export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET' | sudo tee -a /root/.bashrc
-export DPDK_DIR=/usr/src/dpdk-stable-17.11.2
+export DPDK_DIR=/usr/src/dpdk-stable-19.11.2
 export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib
 export DPDK_TARGET=x86_64-native-linuxapp-gcc
 export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET
@@ -85,11 +86,11 @@ sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 
 #### Install Open vSwitch
-export OVS_DIR=/usr/src/openvswitch-2.9.2
+export OVS_DIR=/usr/src/openvswitch-2.14.2
 cd $OVS_DIR
-./boot.sh
-CFLAGS='-march=native' ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-dpdk=$DPDK_BUILD
-make && sudo make install
+#./boot.sh
+CFLAGS='-march=native' sudo ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-dpdk=$DPDK_BUILD
+sudo make && sudo make install
 sudo mkdir -p /usr/local/etc/openvswitch
 sudo mkdir -p /usr/local/var/run/openvswitch
 sudo mkdir -p /usr/local/var/log/openvswitch
@@ -104,7 +105,7 @@ sudo systemctl enable ovs-vswitchd
 sudo systemctl start ovs-vswitchd
 
 #### Cleanup
-rm -rf /home/vagrant/openvswitch-2.9.2.tar.gz /home/vagrant/dpdk-17.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
+rm -rf /home/vagrant/openvswitch-2.14.2.tar.gz /home/vagrant/dpdk-19.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
 
 sudo systemctl start ovsdb-server
 sudo systemctl start ovs-vswitchd
@@ -129,7 +130,7 @@ sudo ovs-vsctl show
 SCRIPT
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/xenial64"
+  config.vm.box = "ubuntu/bionic64"
   config.vm.hostname = "unf"
   config.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
   config.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
