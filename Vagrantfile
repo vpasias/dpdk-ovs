@@ -105,11 +105,13 @@ sudo systemctl start ovs-vswitchd
 
 #### Cleanup
 rm -rf /home/vagrant/openvswitch-2.9.2.tar.gz /home/vagrant/dpdk-17.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
+
+
 SCRIPT
 
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/xenial64"
-  config.vm.hostname = "devstack"
+  config.vm.hostname = "unf"
   config.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
   config.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
   config.vm.provision "shell", privileged: false, inline: $script
@@ -121,6 +123,9 @@ Vagrant.configure("2") do |config|
   config.vm.provider :virtualbox do |v|
       v.customize ["modifyvm", :id, "--cpus", 2]
       v.customize ["modifyvm", :id, "--memory", 4096]
+      v.customize ["modifyvm", :id, "--chipset", "ich9"]
+      v.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+      v.customize ['modifyvm', :id, '--nictype2', '82545EM']
       v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
 
       # Configure VirtualBox to enable passthrough of SSE 4.1 and SSE 4.2
