@@ -21,7 +21,10 @@ sudo cp /tmp/ovs-vswitchd.service /etc/systemd/system/ovs-vswitchd.service
 sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
 
 # Name of network interface provisioned for DPDK to bind
-export NET_IF_NAME=enp0s8
+export NET1_IF_NAME=enp0s8
+export NET2_IF_NAME=enp0s9
+export NET3_IF_NAME=enp0s10
+export NET4_IF_NAME=enp0s11
 
 sudo apt-get -qq update
 sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
@@ -81,8 +84,8 @@ echo "igb_uio" | sudo tee -a /etc/modules
 
 # Bind secondary network adapter
 # Note that this NIC setup does not persist across reboots
-sudo ifconfig ${NET_IF_NAME} down
-sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF_NAME}
+sudo ifconfig ${NET1_IF_NAME} down
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET1_IF_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 
 #### Install Open vSwitch
@@ -132,6 +135,8 @@ SCRIPT
 Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
   config.vm.hostname = "unf"
+  config.vm.provision "shell", path: "gen_provisioning-unf"
+  config.vm.provision :reload
   config.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
   config.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
   config.vm.provision "shell", privileged: false, inline: $script
@@ -141,6 +146,7 @@ Vagrant.configure("2") do |config|
   # using a specific IP.
   # This option is needed otherwise the Intel DPDK takes over the entire adapter
   config.vm.provider :virtualbox do |v|
+      v.name = "unf"
       v.customize ["modifyvm", :id, "--cpus", 2]
       v.customize ["modifyvm", :id, "--memory", 8192]
       v.customize ["modifyvm", :id, "--chipset", "ich9"]
