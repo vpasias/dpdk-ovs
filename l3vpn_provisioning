@@ -3,12 +3,12 @@
 X=$(hostname)
 case "$X" in
     PE*)
-        mpls_ints=("eth3")
+        mpls_ints=("br3")
         loopback_addr="${X: -1}"
         router_type="pe"
         ;;
     P*)
-        mpls_ints=("eth1" "eth2")
+        mpls_ints=("br1" "br2")
         loopback_addr="$(("${X: -1}"+100))"
         router_type="p"
         ;;
@@ -69,8 +69,8 @@ if [[ "$router_type" =~ "pe" ]]; then
     sudo ip route add blackhole 0.0.0.0/0 table 20
     sudo ip link add name vrf_cust1 type vrf table 10
     sudo ip link add name vrf_cust2 type vrf table 20
-    sudo ip link set eth1 master vrf_cust1
-    sudo ip link set eth2 master vrf_cust2
+    sudo ip link set br1 master vrf_cust1
+    sudo ip link set br2 master vrf_cust2
     sudo ip link set vrf_cust1 up
     sudo ip link set vrf_cust2 up
 fi
