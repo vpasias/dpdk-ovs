@@ -22,10 +22,10 @@ sudo cp /tmp/ovs-vswitchd.service /etc/systemd/system/ovs-vswitchd.service
 sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
 
 # Name of network interface provisioned for DPDK to bind
-export NET1_IF_NAME=enp0s8
-export NET2_IF_NAME=enp0s9
-export NET3_IF_NAME=enp0s10
-export NET4_IF_NAME=enp0s11
+export NET_IF1_NAME=enp0s8
+export NET_IF2_NAME=enp0s9
+export NET_IF3_NAME=enp0s10
+export NET_IF4_NAME=enp0s11
 
 sudo apt-get -qq update
 sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
@@ -86,10 +86,10 @@ echo "igb_uio" | sudo tee -a /etc/modules
 
 # Bind secondary network adapter
 # Note that this NIC setup does not persist across reboots
-sudo ifconfig ${NET1_IF_NAME} down
-sudo ifconfig ${NET2_IF_NAME} down
-sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET1_IF_NAME}
-sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET2_IF_NAME}
+sudo ifconfig ${NET_IF1_NAME} down
+sudo ifconfig ${NET_IF2_NAME} down
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 
 #### Install Open vSwitch
