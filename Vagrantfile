@@ -7,6 +7,7 @@
 # 2.8.x         17.05.2
 # 2.9.x         17.11.2
 # 2.14.x        19.11.2
+# 2.15.x        20.11.0
 
 $script1 = <<SCRIPT
 set -e -x -u
@@ -86,7 +87,9 @@ echo "igb_uio" | sudo tee -a /etc/modules
 # Bind secondary network adapter
 # Note that this NIC setup does not persist across reboots
 sudo ifconfig ${NET1_IF_NAME} down
+sudo ifconfig ${NET2_IF_NAME} down
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET1_IF_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET2_IF_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 
 #### Install Open vSwitch
@@ -126,7 +129,9 @@ sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
 
 # userspace datapath with dpdk
 sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
-sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0 
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
+sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0 
 
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
