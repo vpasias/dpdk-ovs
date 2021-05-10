@@ -8,7 +8,7 @@
 # 2.9.x         17.11.2
 # 2.14.x        19.11.2
 
-$script = <<SCRIPT
+$script1 = <<SCRIPT
 set -e -x -u
 # Configure hugepages
 # You can later check if this change was successful with `cat /proc/meminfo`
@@ -125,44 +125,46 @@ sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=0x2
 sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
 
 # userspace datapath with dpdk
-sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=netdev
-sudo ovs-vsctl add-port br0 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0 
+sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0 
 
 # kernel datapath
-sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=system
+sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
 SCRIPT
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/bionic64"
-  config.vm.hostname = "unf"
-  config.vm.provision "shell", path: "gen_provisioning-unf"
-  config.vm.provision :reload
-  config.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
-  config.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
-  config.vm.provision "shell", privileged: false, inline: $script
-  config.vm.network "private_network", ip: "192.168.200.100", virtualbox_intnet: "net1"
-
-  # Create a private network, which allows host-only access to the machine
-  # using a specific IP.
-  # This option is needed otherwise the Intel DPDK takes over the entire adapter
-  config.vm.provider :virtualbox do |v|
-      v.name = "unf"
-      v.customize ["modifyvm", :id, "--cpus", 2]
-      v.customize ["modifyvm", :id, "--memory", 8192]
-      v.customize ["modifyvm", :id, "--chipset", "ich9"]
-      v.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
-      v.customize ['modifyvm', :id, '--nictype2', '82545EM']
-      v.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
-
-      # Configure VirtualBox to enable passthrough of SSE 4.1 and SSE 4.2
-      # instructions, according to this:
-      # https://www.virtualbox.org/manual/ch09.html#sse412passthrough
-      # This step is fundamental otherwise DPDK won't build.
-      # It is possible to verify in the guest OS that these changes took effect
-      # by running `cat /proc/cpuinfo` and checking that `sse4_1` and `sse4_2`
-      # are listed among the CPU flags
-      v.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
-      v.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
-  end # end provider
+  config.vm.define "p1" do |p1|
+      p1.vm.box = "ubuntu/bionic64"
+      p1.vm.hostname = "P1"
+      p1.vm.provision "shell", path: "gen_provisioning-unf"
+      p1.vm.provision :reload
+      p1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      p1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      p1.vm.provision "shell", privileged: false, inline: $script1
+      p1.vm.network "private_network", ip: "172.16.150.90", virtualbox_intnet: "pe1p1"
+      p1.vm.network "private_network", ip: "172.16.250.90", virtualbox_intnet: "pe2p1"
+      # Create a private network, which allows host-only access to the machine using a specific IP.
+      # This option is needed otherwise the Intel DPDK takes over the entire adapter.
+      p1.vm.provider :virtualbox do |vbox|
+            vbox.name = "P1"
+            vbox.customize ["modifyvm", :id, "--cpus", 2]
+            vbox.customize ["modifyvm", :id, "--memory", 8192]
+            vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
+            vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            # Configure VirtualBox to enable passthrough of SSE 4.1 and SSE 4.2
+            # instructions, according to this:
+            # https://www.virtualbox.org/manual/ch09.html#sse412passthrough
+            # This step is fundamental otherwise DPDK won't build.
+            # It is possible to verify in the guest OS that these changes took effect
+            # by running `cat /proc/cpuinfo` and checking that `sse4_1` and `sse4_2`
+            # are listed among the CPU flags
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+      end # end provider
+  end 
 end
