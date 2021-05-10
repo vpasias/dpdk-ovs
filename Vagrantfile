@@ -28,6 +28,7 @@ export NET4_IF_NAME=enp0s11
 
 sudo apt-get -qq update
 sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
+sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
 sudo pip install six
 
 #### Install Golang
@@ -44,7 +45,7 @@ rm -rf /home/vagrant/go1.9.1.linux-amd64.tar.gz
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt-get -qq update
-sudo apt-get -qq install -y docker-ce
+sudo apt-get -qq install -y docker-ce docker-ce-cli containerd.io
 
 #### Download DPDK, Open vSwitch and pktgen source
 wget --quiet https://fast.dpdk.org/rel/dpdk-19.11.2.tar.xz
