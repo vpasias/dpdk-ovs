@@ -138,8 +138,10 @@ sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
 
 sudo ip addr add 172.16.150.90/24 dev br1
+sudo ip link set dev br1 mtu 9000
 sudo ip link set br1 up
 sudo ip addr add 172.16.250.90/24 dev br2
+sudo ip link set dev br2 mtu 9000
 sudo ip link set br2 up
 
 # End of script1
@@ -278,10 +280,13 @@ sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
 
 sudo ip addr add 172.16.111.100/24 dev br1
+sudo ip link set dev br1 mtu 9000
 sudo ip link set br1 up
 sudo ip addr add 172.16.112.100/24 dev br2
+sudo ip link set dev br2 mtu 9000
 sudo ip link set br2 up
 sudo ip addr add 172.16.150.100/24 dev br3
+sudo ip link set dev br3 mtu 9000
 sudo ip link set br3 up
 
 # End of script2
@@ -420,10 +425,13 @@ sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
 
 sudo ip addr add 172.16.211.100/24 dev br1
+sudo ip link set dev br1 mtu 9000
 sudo ip link set br1 up
 sudo ip addr add 172.16.212.100/24 dev br2
+sudo ip link set dev br2 mtu 9000
 sudo ip link set br2 up
 sudo ip addr add 172.16.250.100/24 dev br3
+sudo ip link set dev br3 mtu 9000
 sudo ip link set br3 up
 
 # End of script3
