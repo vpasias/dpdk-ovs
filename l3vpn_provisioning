@@ -37,7 +37,7 @@ if [[ !("$router_type" =~ "ce") ]]; then
     sudo sysctl net.mpls.platform_labels=100000
     for interface in "${mpls_ints[@]}"; do
         sudo sysctl net.mpls.conf."$interface".input=1
-        sudo ifconfig "$interface" mtu 9000 up
+ #       sudo ifconfig "$interface" mtu 9000 up
     done
     curl -s https://deb.frrouting.org/frr/keys.asc | sudo apt-key add -
     echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
