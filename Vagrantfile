@@ -129,9 +129,9 @@ sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
 
 # userspace datapath with dpdk
 sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
-sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0 mtu_request=9000
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
 sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
-sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0 mtu_request=9000
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
 
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
@@ -267,11 +267,11 @@ sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
 
 # userspace datapath with dpdk
 sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
-sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0 mtu_request=9000
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
 sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
-sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0 mtu_request=9000
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
 sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
-sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0 mtu_request=9000
+sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
 
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
@@ -409,11 +409,11 @@ sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
 
 # userspace datapath with dpdk
 sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
-sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0 mtu_request=9000
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
 sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
-sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0 mtu_request=9000
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
 sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
-sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0 mtu_request=9000
+sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
 
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
