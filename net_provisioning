@@ -28,6 +28,7 @@ sudo chmod 644 /usr/share/keyrings/*
 sudo apt update -y
 if [[ !("$router_type" =~ "n") ]]; then
 #    sudo apt install ifupdown2 -y
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y install bridge-utils cpu-checker --no-install-recommends
     sudo sysctl net.ipv4.ip_forward=1
     sudo sysctl net.ipv4.conf.all.forwarding=1
     sudo sysctl net.ipv6.conf.all.disable_ipv6=0
@@ -68,12 +69,54 @@ fi
 if [[ "$router_type" =~ "le" ]]; then
 #    sudo ovs-vsctl add-port br1 vxlan100 -- set interface vxlan100 type=vxlan options:dst_port=4789
 #    sudo ovs-vsctl add-port br2 vxlan200 -- set interface vxlan200 type=vxlan options:dst_port=4789
-    sudo ip route add blackhole 0.0.0.0/0 table 10
-    sudo ip route add blackhole 0.0.0.0/0 table 20
-    sudo ip link add name vrf_cust1 type vrf table 10
-    sudo ip link add name vrf_cust2 type vrf table 20
-    sudo ip link set br1 master vrf_cust1
-    sudo ip link set br2 master vrf_cust2
+    # Node 1
+    sudo ip link add vxlan100 type vxlan id 100 local 172.16.250."$loopback_addr" dstport 4789 nolearning
+    sudo ip link set dev vxlan100 mtu 1550
+    sudo ip link set vxlan100 up
+    sudo brctl addbr br100
+    sudo brctl addif br100 vxlan100
+    sudo brctl addif br100 br1
+    sudo brctl stp br100 off
+    sudo ip link set br100 address 44:39:39:FF:40:94
+    sudo ip link set br100 up
+    sudo ip link set br1 up
+    sudo ip link add vxlan4000 type vxlan id 4000 local 172.16.250."$loopback_addr" dstport 4789 nolearning
+    sudo brctl addbr br4000
+    sudo brctl addif br4000 vxlan4000
+    sudo ip link set dev br4000 up
+    sudo ip link set dev vxlan4000 mtu 1550
+    sudo ip link set vxlan4000 up
+    sudo ip link add vrf_cust1 type vrf table 100
     sudo ip link set vrf_cust1 up
+    sudo ip link set br100 master vrf_cust1
+    sudo ip link set br4000 master vrf_cust1
+    # Node 2
+    sudo ip link add vxlan200 type vxlan id 200 local 172.16.250."$loopback_addr" dstport 4789 nolearning
+    sudo ip link set dev vxlan200 mtu 1550
+    sudo ip link set vxlan200 up
+    sudo brctl addbr br200
+    sudo brctl addif br200 vxlan200
+    sudo brctl addif br200 br2
+    sudo brctl stp br200 off
+    sudo ip link set br200 address 44:39:39:FF:40:95
+    sudo ip link set br200 up
+    sudo ip link set br2 up
+    sudo ip link add vxlan4001 type vxlan id 4001 local 172.16.250."$loopback_addr" dstport 4789 nolearning
+    sudo brctl addbr br4001
+    sudo brctl addif br4001 vxlan4001
+    sudo ip link set dev br4001 up
+    sudo ip link set dev vxlan4001 mtu 1550
+    sudo ip link set vxlan4001 up
+    sudo ip link add vrf_cust2 type vrf table 200
     sudo ip link set vrf_cust2 up
+    sudo ip link set br200 master vrf_cust2
+    sudo ip link set br4001 master vrf_cust2    
+#    sudo ip route add blackhole 0.0.0.0/0 table 10
+#    sudo ip route add blackhole 0.0.0.0/0 table 20
+#    sudo ip link add name vrf_cust1 type vrf table 10
+#    sudo ip link add name vrf_cust2 type vrf table 20
+#    sudo ip link set br1 master vrf_cust1
+#    sudo ip link set br2 master vrf_cust2
+#    sudo ip link set vrf_cust1 up
+#    sudo ip link set vrf_cust2 up
 fi
