@@ -28,7 +28,6 @@ sudo chmod 644 /usr/share/keyrings/*
 sudo apt update -y
 if [[ !("$router_type" =~ "n") ]]; then
 #    sudo apt install ifupdown2 -y
-    sudo DEBIAN_FRONTEND=noninteractive apt-get -y install bridge-utils cpu-checker --no-install-recommends
     sudo sysctl net.ipv4.ip_forward=1
     sudo sysctl net.ipv4.conf.all.forwarding=1
     sudo sysctl net.ipv6.conf.all.disable_ipv6=0
@@ -69,6 +68,7 @@ fi
 if [[ "$router_type" =~ "le" ]]; then
 #    sudo ovs-vsctl add-port br1 vxlan100 -- set interface vxlan100 type=vxlan options:dst_port=4789
 #    sudo ovs-vsctl add-port br2 vxlan200 -- set interface vxlan200 type=vxlan options:dst_port=4789
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y install bridge-utils cpu-checker --no-install-recommends
     # Node 1
     sudo ip link add vxlan100 type vxlan id 100 local 172.16.250."$loopback_addr" dstport 4789 nolearning
     sudo ip link set dev vxlan100 mtu 1550
