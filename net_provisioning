@@ -66,8 +66,8 @@ else
     sudo ip route add 172.16.0.0/16 via 172.16."$subnet".100
 fi
 if [[ "$router_type" =~ "le" ]]; then
-#    sudo ovs-vsctl add-port br1 vxlan100 -- set interface vxlan100 type=vxlan options:dst_port=4789
-#    sudo ovs-vsctl add-port br2 vxlan200 -- set interface vxlan200 type=vxlan options:dst_port=4789
+#    sudo ovs-vsctl add-port br1 vxlan100 -- set interface vxlan100 type=vxlan options:dst_port=4789 options:local_ip=172.16.250."$loopback_addr" options:remote_ip=172.16.250.102
+#    sudo ovs-vsctl add-port br2 vxlan200 -- set interface vxlan200 type=vxlan options:dst_port=4789 options:local_ip=172.16.250."$loopback_addr" options:remote_ip=172.16.250.103
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install bridge-utils cpu-checker --no-install-recommends
     # Node 1
     sudo ip link add vxlan100 type vxlan id 100 local 172.16.250."$loopback_addr" dstport 4789 nolearning
