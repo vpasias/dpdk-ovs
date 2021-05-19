@@ -557,10 +557,11 @@ Vagrant.configure("2") do |config|
       s2.vm.provision "shell", path: "net_provisioning"
   end
   config.vm.define "le1" do |le1|
-      le1.vm.box = "ubuntu/bionic64"
+#      le1.vm.box = "ubuntu/bionic64"
+      le1.vm.box = "unf"
       le1.vm.hostname = "LE1"
-      le1.vm.provision "shell", path: "gen_provisioning-unf"
-      le1.vm.provision :reload
+#      le1.vm.provision "shell", path: "gen_provisioning-unf"
+#      le1.vm.provision :reload
       le1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       le1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       le1.vm.provision "shell", privileged: false, inline: $scriptle1
