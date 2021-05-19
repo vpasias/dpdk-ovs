@@ -347,9 +347,9 @@ sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
-sudo ip addr add 172.16.111.100/24 dev br1
+#sudo ip addr add 172.16.101.10/24 dev br1
 sudo ip link set br1 up
-sudo ip addr add 172.16.112.100/24 dev br2
+#sudo ip addr add 172.16.102.10/24 dev br2
 sudo ip link set br2 up
 sudo ip addr add 172.16.11.100/24 dev br3
 sudo ovs-vsctl set int br3 mtu_request=9000
@@ -472,9 +472,9 @@ sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
-sudo ip addr add 172.16.123.100/24 dev br1
+#sudo ip addr add 172.16.101.20/24 dev br1
 sudo ip link set br1 up
-sudo ip addr add 172.16.124.100/24 dev br2
+#sudo ip addr add 172.16.102.20/24 dev br2
 sudo ip link set br2 up
 sudo ip addr add 172.16.12.100/24 dev br3
 sudo ovs-vsctl set int br3 mtu_request=9000
@@ -564,8 +564,8 @@ Vagrant.configure("2") do |config|
       le1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       le1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       le1.vm.provision "shell", privileged: false, inline: $scriptle1
-      le1.vm.network "private_network", ip: "172.16.111.100", virtualbox_intnet: "le1n1"
-      le1.vm.network "private_network", ip: "172.16.112.100", virtualbox_intnet: "le1n2"
+      le1.vm.network "private_network", ip: "172.16.101.10", virtualbox_intnet: "le1n1"
+      le1.vm.network "private_network", ip: "172.16.102.10", virtualbox_intnet: "le1n2"
       le1.vm.network "private_network", ip: "172.16.11.100", virtualbox_intnet: "le1s1"
       le1.vm.network "private_network", ip: "172.16.21.100", virtualbox_intnet: "le1s2"
       le1.vm.provider :virtualbox do |vbox|
@@ -596,8 +596,8 @@ Vagrant.configure("2") do |config|
       le2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       le2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       le2.vm.provision "shell", privileged: false, inline: $scriptle2
-      le2.vm.network "private_network", ip: "172.16.123.100", virtualbox_intnet: "le2n3"
-      le2.vm.network "private_network", ip: "172.16.124.100", virtualbox_intnet: "le2n4"
+      le2.vm.network "private_network", ip: "172.16.101.20", virtualbox_intnet: "le2n3"
+      le2.vm.network "private_network", ip: "172.16.102.20", virtualbox_intnet: "le2n4"
       le2.vm.network "private_network", ip: "172.16.12.100", virtualbox_intnet: "le2s1"
       le2.vm.network "private_network", ip: "172.16.22.100", virtualbox_intnet: "le2s2"
       le2.vm.provider :virtualbox do |vbox|
@@ -623,7 +623,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "n1" do |n1|
       n1.vm.box = "generic/ubuntu2004"
       n1.vm.hostname = "N1"
-      n1.vm.network "private_network", ip: "172.16.111.10", virtualbox_intnet: "le1n1"
+      n1.vm.network "private_network", ip: "172.16.101.30", virtualbox_intnet: "le1n1"
       n1.vm.provider "virtualbox" do |vbox|
             vbox.name = "N1"
             vbox.memory = 16384
@@ -638,7 +638,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "n2" do |n2|
       n2.vm.box = "generic/ubuntu2004"
       n2.vm.hostname = "N2"
-      n2.vm.network "private_network", ip: "172.16.112.10", virtualbox_intnet: "le1n2"
+      n2.vm.network "private_network", ip: "172.16.102.30", virtualbox_intnet: "le1n2"
       n2.vm.provider "virtualbox" do |vbox|
             vbox.name = "N2"
             vbox.memory = 16384
@@ -653,7 +653,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "n3" do |n3|
       n3.vm.box = "generic/ubuntu2004"
       n3.vm.hostname = "N3"
-      n3.vm.network "private_network", ip: "172.16.123.10", virtualbox_intnet: "le2n3"
+      n3.vm.network "private_network", ip: "172.16.101.40", virtualbox_intnet: "le2n3"
       n3.vm.provider "virtualbox" do |vbox|
             vbox.name = "N3"
             vbox.memory = 16384
@@ -668,7 +668,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "n4" do |n4|
       n4.vm.box = "generic/ubuntu2004"
       n4.vm.hostname = "N4"
-      n4.vm.network "private_network", ip: "172.16.124.10", virtualbox_intnet: "le2n4"
+      n4.vm.network "private_network", ip: "172.16.102.40", virtualbox_intnet: "le2n4"
       n4.vm.provider "virtualbox" do |vbox|
             vbox.name = "N4"
             vbox.memory = 16384
