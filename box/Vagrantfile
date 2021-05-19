@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
             vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
-	          vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+	    vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
   end
 end
