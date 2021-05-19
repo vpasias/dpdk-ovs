@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# Modify interface management
+
+sudo mkdir -p /etc/network/interfaces.d
+
+cat << EOF | sudo tee /etc/network/interfaces
+auto lo
+iface lo inet loopback
+    address 127.0.0.2/32
+    
+auto ens
+allow-hotplug ens
+iface ens inet dhcp
+    mtu 9000
+    
+source /etc/network/interfaces.d/*.cfg
+EOF
+
+sudo apt install ifupdown2 -y && sudo apt remove netplan.io libnetplan0 -y && sudo rm -rf /etc/netplan/*.yml
