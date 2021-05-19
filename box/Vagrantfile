@@ -1,0 +1,21 @@
+Vagrant.configure("2") do |config|
+  config.vm.define "unf" do |unf|
+      unf.vm.box = "ubuntu/bionic64"
+      unf.vm.hostname = "unf"
+      unf.vm.provision "shell", path: "gen_provisioning-unf"
+      unf.vm.provision :reload
+      unf.vm.provision "shell", path: "ifmod"
+      unf.vm.provision :reload
+      unf.vm.provision "shell", path: "prep"
+      unf.vm.provision :reload
+      unf.vm.provider "virtualbox" do |vbox|
+            vbox.name = "unf"
+            vbox.memory = 16384
+            vbox.cpus = 4
+            vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
+            vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+	          vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+      end
+  end
+end
