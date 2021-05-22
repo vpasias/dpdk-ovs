@@ -487,10 +487,11 @@ SCRIPT
 
 Vagrant.configure("2") do |config|
   config.vm.define "s1" do |s1|
-      s1.vm.box = "ubuntu/bionic64"
+#      s1.vm.box = "ubuntu/bionic64"
+      s1.vm.box = "unf"
       s1.vm.hostname = "S1"
-      s1.vm.provision "shell", path: "gen_provisioning-unf"
-      s1.vm.provision :reload
+#      s1.vm.provision "shell", path: "gen_provisioning-unf"
+#      s1.vm.provision :reload
       s1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       s1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       s1.vm.provision "shell", privileged: false, inline: $scripts1
@@ -522,10 +523,11 @@ Vagrant.configure("2") do |config|
       s1.vm.provision "shell", path: "net_provisioning"
   end
   config.vm.define "s2" do |s2|
-      s2.vm.box = "ubuntu/bionic64"
+#      s2.vm.box = "ubuntu/bionic64"
+      s2.vm.box = "unf"
       s2.vm.hostname = "S2"
-      s2.vm.provision "shell", path: "gen_provisioning-unf"
-      s2.vm.provision :reload
+#      s2.vm.provision "shell", path: "gen_provisioning-unf"
+#      s2.vm.provision :reload
       s2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       s2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       s2.vm.provision "shell", privileged: false, inline: $scripts2
@@ -590,10 +592,11 @@ Vagrant.configure("2") do |config|
       le1.vm.provision "shell", path: "net_provisioning"
   end
   config.vm.define "le2" do |le2|
-      le2.vm.box = "ubuntu/bionic64"
+#      le2.vm.box = "ubuntu/bionic64"
+      le2.vm.box = "unf"
       le2.vm.hostname = "LE2"
-      le2.vm.provision "shell", path: "gen_provisioning-unf"
-      le2.vm.provision :reload
+#      le2.vm.provision "shell", path: "gen_provisioning-unf"
+#      le2.vm.provision :reload
       le2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       le2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       le2.vm.provision "shell", privileged: false, inline: $scriptle2
