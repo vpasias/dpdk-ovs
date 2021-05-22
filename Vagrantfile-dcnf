@@ -343,7 +343,7 @@ sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-
 sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
 sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
 sudo ovs-vsctl add-br br4 -- set bridge br4 datapath_type=netdev
-sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:0b.0
+sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:10.0
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
@@ -468,7 +468,7 @@ sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-
 sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
 sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
 sudo ovs-vsctl add-br br4 -- set bridge br4 datapath_type=netdev
-sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:0b.0
+sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:10.0
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
