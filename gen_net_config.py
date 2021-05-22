@@ -182,6 +182,7 @@ for i in range(4, len(iso_net), 4):
     iso_net = iso_net[:i+step] + '.' + iso_net[i+step:]
     step += 1
 iso_net = '49.0001.' + iso_net + '.00'
+if edge_router:
 template = Template(frr_config_template)
 rendered = template.render(frr_version=frr_version,
                            router_hostname=router_hostname,
@@ -190,10 +191,23 @@ rendered = template.render(frr_version=frr_version,
                            local_loopback=local_loopback.compressed,
                            rr1_loopback=rr1_loopback,
                            rr2_loopback=rr2_loopback,
+                           iso_net=iso_net,
+                           local_loopback_ipv6=local_loopback_ipv6
+                           )
+with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
+    for line in rendered.split('\n'):
+        if line.strip():
+            config_file.write(line+'\n')
+if rr_router:
+template = Template(frr_config_template)
+rendered = template.render(frr_version=frr_version,
+                           router_hostname=router_hostname,
+                           mpls_interfaces=mpls_interfaces,
+                           edge_router=edge_router,
+                           local_loopback=local_loopback.compressed,
                            neighbor1_loopback=neighbor1_loopback,
                            neighbor2_loopback=neighbor2_loopback,
                            iso_net=iso_net,
-                           sr_index=sr_index,
                            local_loopback_ipv6=local_loopback_ipv6
                            )
 with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
