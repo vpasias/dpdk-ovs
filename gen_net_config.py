@@ -122,7 +122,7 @@ with open('/etc/hostname', 'r', encoding='utf-8') as infile:
 
 mpls_interfaces = mpls_int_map[router_hostname]
 rr_router = True if 'S' in router_hostname else False
-edge_router = True if 'LE' in router_hostname else False
+edge_router = True if 'L' in router_hostname else False
 
 loopback_addr_run = subprocess.run(['ip', '-br', 'address', 'show', 'lo'],
                                    stdout=subprocess.PIPE)
