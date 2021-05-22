@@ -521,7 +521,7 @@ Vagrant.configure("2") do |config|
       s1.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
       s1.vm.provision "shell", path: "net_provisioning"
   end
-  config.vm.define "s2" do |s1|
+  config.vm.define "s2" do |s2|
       s2.vm.box = "ubuntu/bionic64"
       s2.vm.hostname = "S2"
       s2.vm.provision "shell", path: "gen_provisioning-unf"
