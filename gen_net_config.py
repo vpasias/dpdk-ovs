@@ -212,7 +212,7 @@ if rr_router:
     rendered = template.render(frr_version=frr_version,
                                router_hostname=router_hostname,
                                mpls_interfaces=mpls_interfaces,
-                               edge_router=edge_router,
+                               rr_router=rr_router,
                                local_loopback=local_loopback.compressed,
                                neighbor1_loopback=neighbor1_loopback,
                                neighbor2_loopback=neighbor2_loopback,
