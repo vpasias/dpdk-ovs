@@ -160,7 +160,7 @@ if edge_router:
     rr1_loopback = '172.16.250.1'
     rr2_loopback = '172.16.250.2'
 if rr_router:
-   if lo_octets[-1] == '1':
+    if lo_octets[-1] == '1':
         neighbor1_last_octet = '101'        
         neighbor2_last_octet = '102'  
     elif lo_octets[-1] == '2':
