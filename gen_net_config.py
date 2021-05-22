@@ -47,6 +47,14 @@ router bgp 65010
 !
 {% endif %}
 {% if edge_router %}
+vrf vrf_cust1
+ vni 4000
+ exit-vrf
+!
+vrf vrf_cust2
+ vni 4001
+ exit-vrf
+!
 router bgp 65010
  bgp router-id {{ local_loopback }}
  coalesce-time 1000
