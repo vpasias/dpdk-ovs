@@ -74,7 +74,7 @@ router bgp 65010
   advertise ipv4 unicast
  exit-address-family
 !
-router bgp 65000 vrf vrf_cust1
+router bgp 65010 vrf vrf_cust1
  address-family l2vpn evpn
   advertise ipv4 unicast
  exit-address-family
@@ -83,7 +83,7 @@ router bgp 65000 vrf vrf_cust1
   redistribute connected
  exit-address-family
 !
-router bgp 65000 vrf vrf_cust2
+router bgp 65010 vrf vrf_cust2
  address-family l2vpn evpn
   advertise ipv4 unicast
  exit-address-family
