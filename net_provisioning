@@ -65,6 +65,7 @@ else
     IFS='.' read -ra octets <<< "${addr[-1]}"
     subnet=${octets[2]}
     sudo ip route add 172.16.0.0/16 via 172.16."$subnet".100
+    sudo apt update -y && sudo apt-get install -y iperf iperf3 mtr traceroute netcat
 fi
 if [[ "$router_type" =~ "le" ]]; then
 #    sudo ovs-vsctl add-port br1 vxlan100 -- set interface vxlan100 type=vxlan options:dst_port=4789 options:local_ip=172.16.250."$loopback_addr" options:remote_ip=172.16.250.102
