@@ -45,7 +45,7 @@ router bgp 65010
  exit-address-family
 !
 {% endif %}
-{% if edge_router %}
+{% if ledge_router %}
 vrf vrf_cust1
  vni 4000
  exit-vrf
@@ -94,20 +94,75 @@ router bgp 65010 vrf vrf_cust2
  !
 !
 {% endif %}
+{% if pedge_router %}
+router bgp 65020
+ neighbor {{ neighbor_loopback }} remote-as 65020
+ neighbor {{ neighbor_loopback }} update-source {{ local_loopback }}
+ !
+ address-family ipv4 vpn
+  neighbor {{ neighbor_loopback }} activate
+ exit-address-family
+!
+router bgp 65020 vrf vrf_cust3
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  label vpn export auto
+  rd vpn export 65020:10
+  rt vpn both 1:1
+  export vpn
+  import vpn
+ exit-address-family
+!
+router bgp 65020 vrf vrf_cust4
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  label vpn export auto
+  rd vpn export 65020:20
+  rt vpn both 2:2
+  export vpn
+  import vpn
+ exit-address-family
+!
+{% endif %}
+mpls ldp
+ router-id {{ local_loopback }}
+ !
+ address-family ipv4
+  discovery transport-address {{ local_loopback }}
+  !
+  {% for interface in mpls_interfaces %}
+  interface {{ interface }}
+  !
+  {% endfor %}
+ exit-address-family
+ !
+!
 router ospf
  ospf router-id {{ local_loopback }}
  network 172.16.0.0/16 area 0
  router-info area
+ fast-reroute ti-lfa
+ capability opaque
+ mpls-te on
+ mpls-te router-address {{ local_loopback }}
+ segment-routing on
+ segment-routing global-block 16000 23999
+ segment-routing node-msd 8
+ segment-routing prefix {{ local_loopback }}/32 index {{ sr_index }}
 !
 bfd
 !
 line vty
 !'''
 mpls_int_map = {
-    'S1': ['br1', 'br2'],
-    'S2': ['br1', 'br2'],
+    'S1': ['br1', 'br2', 'br3', 'br4'],
+    'S2': ['br1', 'br2', 'br3', 'br4'],
     'LE1': ['br1', 'br2', 'br3', 'br4'],
-    'LE2': ['br1', 'br2', 'br3', 'br4']
+    'LE2': ['br1', 'br2', 'br3', 'br4'],
+    'PE1': ['br1', 'br2', 'br3', 'br4'],
+    'PE2': ['br1', 'br2', 'br3', 'br4'] 
     }
 
 def prepend_octet(octet):
@@ -131,7 +186,8 @@ with open('/etc/hostname', 'r', encoding='utf-8') as infile:
 
 mpls_interfaces = mpls_int_map[router_hostname]
 rr_router = True if 'S' in router_hostname else False
-edge_router = True if 'L' in router_hostname else False
+ledge_router = True if 'L' in router_hostname else False
+pedge_router = True if 'P' in router_hostname else False
 
 loopback_addr_run = subprocess.run(['ip', '-br', 'address', 'show', 'lo'],
                                    stdout=subprocess.PIPE)
@@ -165,9 +221,20 @@ for address in loopback_addr_ipv6_list:
 
 lo_octets = local_loopback.compressed.split('.')
 neighbor_loopback = ipaddress.ip_address('127.0.0.27')
-if edge_router:
+if ledge_router:
     rr1_loopback = '172.16.250.1'
     rr2_loopback = '172.16.250.2'
+if pedge_router:
+    if lo_octets[-1] == '151':
+        neighbor_last_octet = '152'
+    elif lo_octets[-1] == '152':
+        neighbor_last_octet = '151'
+    else:
+        raise ValueError('unacceptable loopback address {}'.format(
+            local_loopback.compressed))
+    neighbor_octets = lo_octets[:-1]
+    neighbor_octets.append(neighbor_last_octet)
+    neighbor_loopback = ipaddress.ip_address('.'.join(neighbor_octets)) 
 if rr_router:
     if lo_octets[-1] == '1':
         neighbor1_last_octet = '101'        
@@ -191,12 +258,12 @@ for i in range(4, len(iso_net), 4):
     iso_net = iso_net[:i+step] + '.' + iso_net[i+step:]
     step += 1
 iso_net = '49.0001.' + iso_net + '.00'
-if edge_router:
+if ledge_router:
     template = Template(frr_config_template)
     rendered = template.render(frr_version=frr_version,
                                router_hostname=router_hostname,
                                mpls_interfaces=mpls_interfaces,
-                               edge_router=edge_router,
+                               ledge_router=ledge_router,
                                local_loopback=local_loopback.compressed,
                                rr1_loopback=rr1_loopback,
                                rr2_loopback=rr2_loopback,
@@ -207,6 +274,21 @@ if edge_router:
         for line in rendered.split('\n'):
             if line.strip():
                 config_file.write(line+'\n')
+if pedge_router:
+    template = Template(frr_config_template)
+    rendered = template.render(frr_version=frr_version,
+                               router_hostname=router_hostname,
+                               mpls_interfaces=mpls_interfaces,
+                               pedge_router=pedge_router,
+                               local_loopback=local_loopback.compressed,
+                               neighbor_loopback=neighbor_loopback.compressed,
+                               iso_net=iso_net,
+                               local_loopback_ipv6=local_loopback_ipv6
+                               )
+    with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
+        for line in rendered.split('\n'):
+            if line.strip():
+                config_file.write(line+'\n')          
 if rr_router:
     template = Template(frr_config_template)
     rendered = template.render(frr_version=frr_version,
