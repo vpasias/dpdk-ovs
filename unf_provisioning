@@ -55,7 +55,7 @@ if [[ !("$router_type" =~ "n") ]]; then
 #    echo -e 'zebra=yes\nbgpd=yes\nospfd=yes\nbfdd=yes' > frr-daemons
 #    echo -e 'zebra=yes\nbgpd=yes\nfabricd=yes\nbfdd=yes' > frr-daemons
     sudo mv frr-daemons /etc/frr/daemons
-    python3 gen_net_config.py
+    python3 gen_unf_config.py
     sudo mv frr_generated_config /etc/frr/frr.conf
     sudo chown frr:frr /etc/frr/daemons
     sudo chown frr:frr /etc/frr/frr.conf
@@ -122,10 +122,10 @@ fi
 if [[ "$router_type" =~ "pe" ]]; then
     sudo ip route add blackhole 0.0.0.0/0 table 10
     sudo ip route add blackhole 0.0.0.0/0 table 20
-    sudo ip link add name vrf_cust1 type vrf table 10
-    sudo ip link add name vrf_cust2 type vrf table 20
-    sudo ip link set br1 master vrf_cust1
-    sudo ip link set br2 master vrf_cust2
-    sudo ip link set vrf_cust1 up
-    sudo ip link set vrf_cust2 up
+    sudo ip link add name vrf_cust3 type vrf table 10
+    sudo ip link add name vrf_cust4 type vrf table 20
+    sudo ip link set br1 master vrf_cust3
+    sudo ip link set br2 master vrf_cust4
+    sudo ip link set vrf_cust3 up
+    sudo ip link set vrf_cust4 up
 fi
