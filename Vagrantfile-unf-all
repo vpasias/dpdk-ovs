@@ -505,7 +505,7 @@ sudo ip link set br4 up
 # End of scriptle2
 SCRIPT
 
-$scriptle3 = <<SCRIPT
+$scriptpe1 = <<SCRIPT
 set -e -x -u
 # Configure hugepages
 # You can later check if this change was successful with `cat /proc/meminfo`
@@ -627,10 +627,10 @@ sudo ip link set br3 up
 sudo ip addr add 172.16.23.100/24 dev br4
 sudo ovs-vsctl set int br4 mtu_request=9000
 sudo ip link set br4 up
-# End of scriptle3
+# End of scriptpe1
 SCRIPT
 
-$scriptle4 = <<SCRIPT
+$scriptpe2 = <<SCRIPT
 set -e -x -u
 # Configure hugepages
 # You can later check if this change was successful with `cat /proc/meminfo`
@@ -752,7 +752,7 @@ sudo ip link set br3 up
 sudo ip addr add 172.16.24.100/24 dev br4
 sudo ovs-vsctl set int br4 mtu_request=9000
 sudo ip link set br4 up
-# End of scriptle4
+# End of scriptpe2
 SCRIPT
 
 Vagrant.configure("2") do |config|
@@ -764,8 +764,8 @@ Vagrant.configure("2") do |config|
       s1.vm.provision "shell", privileged: false, inline: $scripts1
       s1.vm.network "private_network", ip: "172.16.11.90", virtualbox_intnet: "le1s1"
       s1.vm.network "private_network", ip: "172.16.12.90", virtualbox_intnet: "le2s1"
-      s1.vm.network "private_network", ip: "172.16.13.90", virtualbox_intnet: "le3s1"
-      s1.vm.network "private_network", ip: "172.16.14.90", virtualbox_intnet: "le4s1"
+      s1.vm.network "private_network", ip: "172.16.13.90", virtualbox_intnet: "pe1s1"
+      s1.vm.network "private_network", ip: "172.16.14.90", virtualbox_intnet: "pe2s1"
       s1.vm.provider :virtualbox do |vbox|
             vbox.name = "S1"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
@@ -784,7 +784,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
       s1.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
-      s1.vm.provision "shell", path: "net_provisioning"
+      s1.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "s2" do |s2|
       s2.vm.box = "unf"
@@ -794,8 +794,8 @@ Vagrant.configure("2") do |config|
       s2.vm.provision "shell", privileged: false, inline: $scripts2
       s2.vm.network "private_network", ip: "172.16.21.90", virtualbox_intnet: "le1s2"
       s2.vm.network "private_network", ip: "172.16.22.90", virtualbox_intnet: "le2s2"
-      s2.vm.network "private_network", ip: "172.16.23.90", virtualbox_intnet: "le3s2"
-      s2.vm.network "private_network", ip: "172.16.24.90", virtualbox_intnet: "le4s2"
+      s2.vm.network "private_network", ip: "172.16.23.90", virtualbox_intnet: "pe1s2"
+      s2.vm.network "private_network", ip: "172.16.24.90", virtualbox_intnet: "pe2s2"
       s2.vm.provider :virtualbox do |vbox|
             vbox.name = "S2"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
@@ -814,7 +814,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
       s2.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
-      s2.vm.provision "shell", path: "net_provisioning"
+      s2.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "le1" do |le1|
       le1.vm.box = "unf"
@@ -844,7 +844,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
       le1.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
-      le1.vm.provision "shell", path: "net_provisioning"
+      le1.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "le2" do |le2|
       le2.vm.box = "unf"
@@ -874,20 +874,20 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
       le2.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
-      le2.vm.provision "shell", path: "net_provisioning"
+      le2.vm.provision "shell", path: "unf_provisioning"
   end
-  config.vm.define "le3" do |le3|
-      le3.vm.box = "unf"
-      le3.vm.hostname = "LE3"
-      le3.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
-      le3.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
-      le3.vm.provision "shell", privileged: false, inline: $scriptle3
-      le3.vm.network "private_network", ip: "172.16.170.11", virtualbox_intnet: "le3n5"
-      le3.vm.network "private_network", ip: "172.16.180.11", virtualbox_intnet: "le3n6"
-      le3.vm.network "private_network", ip: "172.16.13.100", virtualbox_intnet: "le3s1"
-      le3.vm.network "private_network", ip: "172.16.23.100", virtualbox_intnet: "le3s2"
-      le3.vm.provider :virtualbox do |vbox|
-            vbox.name = "LE3"
+  config.vm.define "pe1" do |pe1|
+      pe1.vm.box = "unf"
+      pe1.vm.hostname = "PE1"
+      pe1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      pe1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      pe1.vm.provision "shell", privileged: false, inline: $scriptpe1
+      pe1.vm.network "private_network", ip: "172.16.170.11", virtualbox_intnet: "pe1n5"
+      pe1.vm.network "private_network", ip: "172.16.180.11", virtualbox_intnet: "pe1n6"
+      pe1.vm.network "private_network", ip: "172.16.13.100", virtualbox_intnet: "pe1s1"
+      pe1.vm.network "private_network", ip: "172.16.23.100", virtualbox_intnet: "pe1s2"
+      pe1.vm.provider :virtualbox do |vbox|
+            vbox.name = "PE1"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
             vbox.customize ["modifyvm", :id, "--memory", 8192]
             vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
@@ -903,21 +903,21 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
-      le3.vm.provision "file", source: "gen_frr_config.py", destination: "gen_frr_config.py"
-      le3.vm.provision "shell", path: "l3vpn_provisioning"
+      pe1.vm.provision "file", source: "gen_frr_config.py", destination: "gen_frr_config.py"
+      pe1.vm.provision "shell", path: "unf_provisioning"
   end
-  config.vm.define "le4" do |le4|
-      le4.vm.box = "unf"
-      le4.vm.hostname = "LE4"
-      le4.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
-      le4.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
-      le4.vm.provision "shell", privileged: false, inline: $scriptle4
-      le4.vm.network "private_network", ip: "172.16.170.12", virtualbox_intnet: "le4n7"
-      le4.vm.network "private_network", ip: "172.16.180.12", virtualbox_intnet: "le4n8"
-      le4.vm.network "private_network", ip: "172.16.14.100", virtualbox_intnet: "le4s1"
-      le4.vm.network "private_network", ip: "172.16.24.100", virtualbox_intnet: "le4s2"
-      le4.vm.provider :virtualbox do |vbox|
-            vbox.name = "LE4"
+  config.vm.define "pe2" do |pe2|
+      pe2.vm.box = "unf"
+      pe2.vm.hostname = "PE2"
+      pe2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      pe2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      pe2.vm.provision "shell", privileged: false, inline: $scriptpe2
+      pe2.vm.network "private_network", ip: "172.16.170.12", virtualbox_intnet: "pe2n7"
+      pe2.vm.network "private_network", ip: "172.16.180.12", virtualbox_intnet: "pe2n8"
+      pe2.vm.network "private_network", ip: "172.16.14.100", virtualbox_intnet: "pe2s1"
+      pe2.vm.network "private_network", ip: "172.16.24.100", virtualbox_intnet: "pe2s2"
+      pe2.vm.provider :virtualbox do |vbox|
+            vbox.name = "PE2"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
             vbox.customize ["modifyvm", :id, "--memory", 8192]
             vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
@@ -933,8 +933,8 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
-      le4.vm.provision "file", source: "gen_frr_config.py", destination: "gen_frr_config.py"
-      le4.vm.provision "shell", path: "l3vpn_provisioning"
+      pe2.vm.provision "file", source: "gen_frr_config.py", destination: "gen_frr_config.py"
+      pe2.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n1" do |n1|
       n1.vm.box = "generic/ubuntu2004"
@@ -949,7 +949,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n1.vm.provision "shell", path: "net_provisioning"
+      n1.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n2" do |n2|
       n2.vm.box = "generic/ubuntu2004"
@@ -964,7 +964,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n2.vm.provision "shell", path: "net_provisioning"
+      n2.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n3" do |n3|
       n3.vm.box = "generic/ubuntu2004"
@@ -979,7 +979,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n3.vm.provision "shell", path: "net_provisioning"
+      n3.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n4" do |n4|
       n4.vm.box = "generic/ubuntu2004"
@@ -994,12 +994,12 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n4.vm.provision "shell", path: "net_provisioning"
+      n4.vm.provision "shell", path: "unf_provisioning"
   end
     config.vm.define "n5" do |n5|
       n5.vm.box = "generic/ubuntu2004"
       n5.vm.hostname = "N5"
-      n5.vm.network "private_network", ip: "172.16.170.13", virtualbox_intnet: "le3n5"
+      n5.vm.network "private_network", ip: "172.16.170.13", virtualbox_intnet: "pe1n5"
       n5.vm.provider "virtualbox" do |vbox|
             vbox.name = "N5"
             vbox.memory = 16384
@@ -1009,12 +1009,12 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n5.vm.provision "shell", path: "l3vpn_provisioning"
+      n5.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n6" do |n6|
       n6.vm.box = "generic/ubuntu2004"
       n6.vm.hostname = "N6"
-      n6.vm.network "private_network", ip: "172.16.180.13", virtualbox_intnet: "le3n6"
+      n6.vm.network "private_network", ip: "172.16.180.13", virtualbox_intnet: "pe1n6"
       n6.vm.provider "virtualbox" do |vbox|
             vbox.name = "N6"
             vbox.memory = 16384
@@ -1024,12 +1024,12 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n6.vm.provision "shell", path: "l3vpn_provisioning"
+      n6.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n7" do |n7|
       n7.vm.box = "generic/ubuntu2004"
       n7.vm.hostname = "N7"
-      n7.vm.network "private_network", ip: "172.16.170.14", virtualbox_intnet: "le3n7"
+      n7.vm.network "private_network", ip: "172.16.170.14", virtualbox_intnet: "pe2n7"
       n7.vm.provider "virtualbox" do |vbox|
             vbox.name = "N7"
             vbox.memory = 16384
@@ -1039,12 +1039,12 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n7.vm.provision "shell", path: "l3vpn_provisioning"
+      n7.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n8" do |n8|
       n8.vm.box = "generic/ubuntu2004"
       n8.vm.hostname = "N8"
-      n8.vm.network "private_network", ip: "172.16.180.14", virtualbox_intnet: "le3n8"
+      n8.vm.network "private_network", ip: "172.16.180.14", virtualbox_intnet: "pe2n8"
       n8.vm.provider "virtualbox" do |vbox|
             vbox.name = "N8"
             vbox.memory = 16384
@@ -1054,6 +1054,6 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
       end
-      n8.vm.provision "shell", path: "l3vpn_provisioning"
+      n8.vm.provision "shell", path: "unf_provisioning"
   end
 end
