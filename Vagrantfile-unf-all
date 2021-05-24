@@ -783,7 +783,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      s1.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
+      s1.vm.provision "file", source: "gen_unf_config.py", destination: "gen_unf_config.py"
       s1.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "s2" do |s2|
@@ -813,7 +813,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      s2.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
+      s2.vm.provision "file", source: "gen_unf_config.py", destination: "gen_unf_config.py"
       s2.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "le1" do |le1|
@@ -843,7 +843,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
-      le1.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
+      le1.vm.provision "file", source: "gen_unf_config.py", destination: "gen_unf_config.py"
       le1.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "le2" do |le2|
@@ -873,7 +873,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
-      le2.vm.provision "file", source: "gen_net_config.py", destination: "gen_net_config.py"
+      le2.vm.provision "file", source: "gen_unf_config.py", destination: "gen_unf_config.py"
       le2.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "pe1" do |pe1|
@@ -903,7 +903,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
-      pe1.vm.provision "file", source: "gen_frr_config.py", destination: "gen_frr_config.py"
+      pe1.vm.provision "file", source: "gen_unf_config.py", destination: "gen_unf_config.py"
       pe1.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "pe2" do |pe2|
@@ -933,7 +933,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end
-      pe2.vm.provision "file", source: "gen_frr_config.py", destination: "gen_frr_config.py"
+      pe2.vm.provision "file", source: "gen_unf_config.py", destination: "gen_unf_config.py"
       pe2.vm.provision "shell", path: "unf_provisioning"
   end
   config.vm.define "n1" do |n1|
