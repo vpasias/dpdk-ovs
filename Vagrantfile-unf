@@ -75,8 +75,12 @@ echo "igb_uio" | sudo tee -a /etc/modules
 # Note that this NIC setup does not persist across reboots
 sudo ifconfig ${NET_IF1_NAME} down
 sudo ifconfig ${NET_IF2_NAME} down
+sudo ifconfig ${NET_IF3_NAME} down
+sudo ifconfig ${NET_IF4_NAME} down
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF3_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF4_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 #### Install Open vSwitch
 export OVS_DIR=/usr/src/openvswitch-2.14.2
@@ -198,8 +202,12 @@ echo "igb_uio" | sudo tee -a /etc/modules
 # Note that this NIC setup does not persist across reboots
 sudo ifconfig ${NET_IF1_NAME} down
 sudo ifconfig ${NET_IF2_NAME} down
+sudo ifconfig ${NET_IF3_NAME} down
+sudo ifconfig ${NET_IF4_NAME} down
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF3_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF4_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 #### Install Open vSwitch
 export OVS_DIR=/usr/src/openvswitch-2.14.2
