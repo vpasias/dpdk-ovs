@@ -157,8 +157,10 @@ bfd
 line vty
 !'''
 mpls_int_map = {
-    'S1': ['br1', 'br2', 'br3', 'br4'],
-    'S2': ['br1', 'br2', 'br3', 'br4'],
+    'S1': ['br1', 'br2', 'br3', 'br4', 'br5', 'br6', 'br7'],
+    'S2': ['br1', 'br2', 'br3', 'br4', 'br5', 'br6', 'br7'],
+    'X1': ['br1', 'br2', 'br3', 'br4'],
+    'X2': ['br1', 'br2', 'br3', 'br4'],
     'LE1': ['br1', 'br2', 'br3', 'br4'],
     'LE2': ['br1', 'br2', 'br3', 'br4'],
     'PE1': ['br1', 'br2', 'br3', 'br4'],
@@ -185,7 +187,8 @@ with open('/etc/hostname', 'r', encoding='utf-8') as infile:
     router_hostname = infile.read().strip()
 
 mpls_interfaces = mpls_int_map[router_hostname]
-rr_router = True if 'S' in router_hostname else False
+core_router = True if 'S' in router_hostname else False
+rr_router = True if 'X' in router_hostname else False
 ledge_router = True if 'L' in router_hostname else False
 pedge_router = True if 'P' in router_hostname else False
 
@@ -222,8 +225,8 @@ for address in loopback_addr_ipv6_list:
 lo_octets = local_loopback.compressed.split('.')
 neighbor_loopback = ipaddress.ip_address('127.0.0.27')
 if ledge_router:
-    rr1_loopback = '172.16.250.1'
-    rr2_loopback = '172.16.250.2'
+    rr1_loopback = '172.16.250.51'
+    rr2_loopback = '172.16.250.52'
 if pedge_router:
     if lo_octets[-1] == '151':
         neighbor_last_octet = '152'
@@ -298,6 +301,20 @@ if rr_router:
                                local_loopback=local_loopback.compressed,
                                neighbor1_loopback=neighbor1_loopback,
                                neighbor2_loopback=neighbor2_loopback,
+                               iso_net=iso_net,
+                               local_loopback_ipv6=local_loopback_ipv6
+                               )
+    with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
+        for line in rendered.split('\n'):
+            if line.strip():
+                config_file.write(line+'\n')
+if core_router:
+    template = Template(frr_config_template)
+    rendered = template.render(frr_version=frr_version,
+                               router_hostname=router_hostname,
+                               mpls_interfaces=mpls_interfaces,
+                               core_router=core_router,
+                               local_loopback=local_loopback.compressed,
                                iso_net=iso_net,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
