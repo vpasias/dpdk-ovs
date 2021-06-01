@@ -24,6 +24,9 @@ export NET_IF1_NAME=enp0s8
 export NET_IF2_NAME=enp0s9
 export NET_IF3_NAME=enp0s10
 export NET_IF4_NAME=enp0s16
+export NET_IF5_NAME=enp0s17
+export NET_IF6_NAME=enp0s18
+export NET_IF7_NAME=enp0s19
 sudo apt-get -qq update
 sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
 sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
@@ -77,10 +80,16 @@ sudo ifconfig ${NET_IF1_NAME} down
 sudo ifconfig ${NET_IF2_NAME} down
 sudo ifconfig ${NET_IF3_NAME} down
 sudo ifconfig ${NET_IF4_NAME} down
+sudo ifconfig ${NET_IF5_NAME} down
+sudo ifconfig ${NET_IF6_NAME} down
+sudo ifconfig ${NET_IF7_NAME} down
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF3_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF4_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF5_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF6_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF7_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 #### Install Open vSwitch
 export OVS_DIR=/usr/src/openvswitch-2.14.2
@@ -118,6 +127,12 @@ sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
 sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
 sudo ovs-vsctl add-br br4 -- set bridge br4 datapath_type=netdev
 sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:10.0
+sudo ovs-vsctl add-br br5 -- set bridge br5 datapath_type=netdev
+sudo ovs-vsctl add-port br5 dpdk4 -- set Interface dpdk4 type=dpdk options:dpdk-devargs=0000:00:11.0
+sudo ovs-vsctl add-br br6 -- set bridge br6 datapath_type=netdev
+sudo ovs-vsctl add-port br6 dpdk5 -- set Interface dpdk5 type=dpdk options:dpdk-devargs=0000:00:12.0
+sudo ovs-vsctl add-br br7 -- set bridge br7 datapath_type=netdev
+sudo ovs-vsctl add-port br7 dpdk6 -- set Interface dpdk6 type=dpdk options:dpdk-devargs=0000:00:13.0
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
@@ -133,6 +148,15 @@ sudo ip link set br3 up
 sudo ip addr add 172.16.14.90/24 dev br4
 sudo ovs-vsctl set int br4 mtu_request=9000
 sudo ip link set br4 up
+sudo ip addr add 172.16.211.100/24 dev br5
+sudo ovs-vsctl set int br5 mtu_request=9000
+sudo ip link set br5 up
+sudo ip addr add 172.16.212.100/24 dev br6
+sudo ovs-vsctl set int br6 mtu_request=9000
+sudo ip link set br6 up
+sudo ip addr add 172.16.203.90/24 dev br7
+sudo ovs-vsctl set int br7 mtu_request=9000
+sudo ip link set br7 up 
 # End of scripts1
 SCRIPT
 
@@ -151,6 +175,9 @@ export NET_IF1_NAME=enp0s8
 export NET_IF2_NAME=enp0s9
 export NET_IF3_NAME=enp0s10
 export NET_IF4_NAME=enp0s16
+export NET_IF5_NAME=enp0s17
+export NET_IF6_NAME=enp0s18
+export NET_IF7_NAME=enp0s19
 sudo apt-get -qq update
 sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
 sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
@@ -204,10 +231,16 @@ sudo ifconfig ${NET_IF1_NAME} down
 sudo ifconfig ${NET_IF2_NAME} down
 sudo ifconfig ${NET_IF3_NAME} down
 sudo ifconfig ${NET_IF4_NAME} down
+sudo ifconfig ${NET_IF5_NAME} down
+sudo ifconfig ${NET_IF6_NAME} down
+sudo ifconfig ${NET_IF7_NAME} down
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF3_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF4_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF5_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF6_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF7_NAME}
 sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
 #### Install Open vSwitch
 export OVS_DIR=/usr/src/openvswitch-2.14.2
@@ -245,6 +278,12 @@ sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
 sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
 sudo ovs-vsctl add-br br4 -- set bridge br4 datapath_type=netdev
 sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:10.0
+sudo ovs-vsctl add-br br5 -- set bridge br5 datapath_type=netdev
+sudo ovs-vsctl add-port br5 dpdk4 -- set Interface dpdk4 type=dpdk options:dpdk-devargs=0000:00:11.0
+sudo ovs-vsctl add-br br6 -- set bridge br6 datapath_type=netdev
+sudo ovs-vsctl add-port br6 dpdk5 -- set Interface dpdk5 type=dpdk options:dpdk-devargs=0000:00:12.0
+sudo ovs-vsctl add-br br7 -- set bridge br7 datapath_type=netdev
+sudo ovs-vsctl add-port br7 dpdk6 -- set Interface dpdk6 type=dpdk options:dpdk-devargs=0000:00:13.0     
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
@@ -260,6 +299,15 @@ sudo ip link set br3 up
 sudo ip addr add 172.16.24.90/24 dev br4
 sudo ovs-vsctl set int br4 mtu_request=9000
 sudo ip link set br4 up
+sudo ip addr add 172.16.221.100/24 dev br5
+sudo ovs-vsctl set int br5 mtu_request=9000
+sudo ip link set br5 up  
+sudo ip addr add 172.16.222.100/24 dev br6
+sudo ovs-vsctl set int br6 mtu_request=9000
+sudo ip link set br6 up
+sudo ip addr add 172.16.203.100/24 dev br7
+sudo ovs-vsctl set int br7 mtu_request=9000
+sudo ip link set br7 up   
 # End of scripts2
 SCRIPT
 
@@ -1024,6 +1072,9 @@ Vagrant.configure("2") do |config|
       s1.vm.network "private_network", ip: "172.16.12.90", virtualbox_intnet: "le2s1"
       s1.vm.network "private_network", ip: "172.16.13.90", virtualbox_intnet: "pe1s1"
       s1.vm.network "private_network", ip: "172.16.14.90", virtualbox_intnet: "pe2s1"
+      s1.vm.network "private_network", ip: "172.16.211.100", virtualbox_intnet: "s1x1"
+      s1.vm.network "private_network", ip: "172.16.221.100", virtualbox_intnet: "s1x2"
+      s1.vm.network "private_network", ip: "172.16.203.90", virtualbox_intnet: "s1s2"    
       s1.vm.provider :virtualbox do |vbox|
             vbox.name = "S1"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
@@ -1034,10 +1085,16 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
             vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype4', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype5', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc5', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype6', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc6', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype7', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc7', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype8', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc8', 'allow-all']
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
@@ -1054,6 +1111,9 @@ Vagrant.configure("2") do |config|
       s2.vm.network "private_network", ip: "172.16.22.90", virtualbox_intnet: "le2s2"
       s2.vm.network "private_network", ip: "172.16.23.90", virtualbox_intnet: "pe1s2"
       s2.vm.network "private_network", ip: "172.16.24.90", virtualbox_intnet: "pe2s2"
+      s2.vm.network "private_network", ip: "172.16.212.100", virtualbox_intnet: "s2x1"
+      s2.vm.network "private_network", ip: "172.16.222.100", virtualbox_intnet: "s2x2"
+      s2.vm.network "private_network", ip: "172.16.203.100", virtualbox_intnet: "s1s2" 
       s2.vm.provider :virtualbox do |vbox|
             vbox.name = "S2"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
@@ -1064,10 +1124,16 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
             vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype4', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype5', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc5', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype6', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc6', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype7', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc7', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype8', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc8', 'allow-all']
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
@@ -1094,10 +1160,10 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
             vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype4', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype5', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc5', 'allow-all']
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
@@ -1124,10 +1190,10 @@ Vagrant.configure("2") do |config|
             vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
             vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
             vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
-            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
-            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype4', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype5', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc5', 'allow-all']
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
