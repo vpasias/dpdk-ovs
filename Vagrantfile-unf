@@ -299,7 +299,7 @@ sudo ip link set br3 up
 sudo ip addr add 172.16.24.90/24 dev br4
 sudo ovs-vsctl set int br4 mtu_request=9000
 sudo ip link set br4 up
-sudo ip addr add 172.16.221.100/24 dev br5
+sudo ip addr add 172.16.212.100/24 dev br5
 sudo ovs-vsctl set int br5 mtu_request=9000
 sudo ip link set br5 up  
 sudo ip addr add 172.16.222.100/24 dev br6
