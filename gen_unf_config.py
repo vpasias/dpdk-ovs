@@ -186,6 +186,23 @@ frr_version = frr_ver[frr_ver_start+8:frr_ver_end].strip()
 with open('/etc/hostname', 'r', encoding='utf-8') as infile:
     router_hostname = infile.read().strip()
 
+if router_hostname == 'S1':
+    sr_index = '1011'
+elif router_hostname == 'S2':
+    sr_index = '1012'
+elif router_hostname == 'X1':
+    sr_index = '1013'
+elif router_hostname == 'X2':
+    sr_index = '1014'
+elif router_hostname == 'PE1':
+    sr_index = '1015'
+elif router_hostname == 'PE2':
+    sr_index = '1016'
+elif router_hostname == 'LE1':
+    sr_index = '1017'
+elif router_hostname == 'LE2':
+    sr_index = '1018'
+    
 mpls_interfaces = mpls_int_map[router_hostname]
 core_router = True if 'S' in router_hostname else False
 rr_router = True if 'X' in router_hostname else False
@@ -271,6 +288,7 @@ if ledge_router:
                                rr1_loopback=rr1_loopback,
                                rr2_loopback=rr2_loopback,
                                iso_net=iso_net,
+                               sr_index=sr_index,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
     with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
@@ -286,6 +304,7 @@ if pedge_router:
                                local_loopback=local_loopback.compressed,
                                neighbor_loopback=neighbor_loopback.compressed,
                                iso_net=iso_net,
+                               sr_index=sr_index,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
     with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
@@ -302,6 +321,7 @@ if rr_router:
                                neighbor1_loopback=neighbor1_loopback,
                                neighbor2_loopback=neighbor2_loopback,
                                iso_net=iso_net,
+                               sr_index=sr_index,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
     with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
@@ -316,6 +336,7 @@ if core_router:
                                core_router=core_router,
                                local_loopback=local_loopback.compressed,
                                iso_net=iso_net,
+                               sr_index=sr_index,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
     with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
