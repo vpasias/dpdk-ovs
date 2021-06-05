@@ -239,10 +239,10 @@ if pedge_router:
     neighbor_octets.append(neighbor_last_octet)
     neighbor_loopback = ipaddress.ip_address('.'.join(neighbor_octets)) 
 if rr_router:
-    if lo_octets[-1] == '1':
+    if lo_octets[-1] == '51':
         neighbor1_last_octet = '101'        
         neighbor2_last_octet = '102'  
-    elif lo_octets[-1] == '2':
+    elif lo_octets[-1] == '52':
         neighbor1_last_octet = '101'        
         neighbor2_last_octet = '102'    
     else:
