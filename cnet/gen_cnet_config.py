@@ -35,17 +35,18 @@ router bgp 65000
  !
  address-family ipv4 unicast
   no neighbor fabric activate
-  no neighbor fabric activate
+  network {{ local_loopback }}/32
  exit-address-family
  !
  address-family ipv6 unicast
-  no neighbor fabric activate
-  no neighbor fabric activate
+  neighbor fabric activate
  exit-address-family
  !
  address-family l2vpn evpn
   neighbor fabric activate
-  neighbor fabric route-reflector-client
+  advertise-all-vni
+  advertise ipv4 unicast
+  advertise ipv6 unicast  
  exit-address-family
 !
 {% endif %}
@@ -71,17 +72,17 @@ router bgp {{ as_number }}
  !
  address-family ipv4 unicast
   no neighbor fabric activate
-  no neighbor fabric activate
+  network {{ local_loopback }}/32
+  neighbor fabric prefix-list host-routes-out out  
  exit-address-family
  !
  address-family ipv6 unicast
-  no neighbor fabric activate
-  no neighbor fabric activate
+  neighbor fabric activate
  exit-address-family
  !
  address-family l2vpn evpn
   neighbor fabric activate
-  neighbor fabric prefix-list host-routes-out out  
+  neighbor fabric prefix-list host-routes-out out
   advertise-all-vni
   advertise ipv4 unicast
   advertise ipv6 unicast  
@@ -193,6 +194,9 @@ if edge_router:
         as_number = 65001        
     elif lo_octets[-1] == '102':
         as_number = 65002
+    else:
+        raise ValueError('unacceptable loopback address {}'.format(
+            local_loopback.compressed))  
 if rr_router:
     if lo_octets[-1] == '1':
         neighbor1_last_octet = '101'        
