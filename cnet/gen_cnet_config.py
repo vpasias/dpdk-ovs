@@ -44,6 +44,7 @@ router bgp 65000
  !
  address-family l2vpn evpn
   neighbor fabric activate
+  neighbor fabric route-reflector-client
   advertise-all-vni
   advertise ipv4 unicast
   advertise ipv6 unicast  
