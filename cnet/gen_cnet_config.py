@@ -12,12 +12,6 @@ log syslog informational
 service integrated-vtysh-config
 username iason nopassword
 !
-{% for interface in mpls_interfaces %}
-interface {{ interface }}
- ipv6 nd ra-interval 5
- no ipv6 nd suppress-ra
-!
-{% endfor %}
 interface lo
  ip address {{ local_loopback }}
 !
@@ -39,7 +33,7 @@ router bgp 65000
  exit-address-family
  !
  address-family ipv6 unicast
-  neighbor fabric activate
+  no neighbor fabric activate
  exit-address-family
  !
  address-family l2vpn evpn
@@ -73,16 +67,16 @@ router bgp {{ as_number }}
  address-family ipv4 unicast
   no neighbor fabric activate
   network {{ local_loopback }}/32
-  neighbor fabric prefix-list host-routes-out out  
+#  no neighbor fabric prefix-list host-routes-out out  
  exit-address-family
  !
  address-family ipv6 unicast
-  neighbor fabric activate
+  no neighbor fabric activate
  exit-address-family
  !
  address-family l2vpn evpn
   neighbor fabric activate
-  neighbor fabric prefix-list host-routes-out out
+#  neighbor fabric prefix-list host-routes-out out
   advertise-all-vni
   advertise ipv4 unicast
   advertise ipv6 unicast  
