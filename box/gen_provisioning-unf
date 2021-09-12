@@ -52,12 +52,6 @@ net.mpls.platform_labels=100000
 net.ipv4.tcp_l3mdev_accept=1
 net.ipv4.udp_l3mdev_accept=1
 net.ipv4.fib_multipath_hash_policy=1
-net.ipv4.neigh.default.gc_thresh1=1
-net.ipv4.neigh.default.gc_thresh2=1
-net.ipv4.neigh.default.gc_thresh3=1
-net.ipv6.neigh.default.gc_thresh1=1
-net.ipv6.neigh.default.gc_thresh2=1
-net.ipv6.neigh.default.gc_thresh3=1
 EOF
 
 sudo mkdir -p /etc/systemd/system/networking.service.d
