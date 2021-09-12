@@ -136,8 +136,10 @@ sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
+sudo ip addr add 172.16.11.1/24 dev br1
 sudo ovs-vsctl set int br1 mtu_request=9000
 sudo ip link set br1 up
+sudo ip addr add 172.16.12.1/24 dev br2
 sudo ovs-vsctl set int br2 mtu_request=9000
 sudo ip link set br2 up
 #sudo ovs-vsctl set int br3 mtu_request=9000
@@ -280,8 +282,10 @@ sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
+sudo ip addr add 172.16.21.1/24 dev br1
 sudo ovs-vsctl set int br1 mtu_request=9000
 sudo ip link set br1 up
+sudo ip addr add 172.16.22.1/24 dev br2
 sudo ovs-vsctl set int br2 mtu_request=9000
 sudo ip link set br2 up
 #sudo ovs-vsctl set int br3 mtu_request=9000
@@ -399,6 +403,8 @@ sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
+sudo ip addr add 172.16.11.2/24 dev br1
+sudo ip addr add 172.16.21.2/24 dev br2
 sudo ovs-vsctl set int br1 mtu_request=9000
 sudo ovs-vsctl set int br2 mtu_request=9000
 sudo ip link set br1 up
@@ -508,6 +514,8 @@ sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-
 # kernel datapath
 sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
 sudo ovs-vsctl show
+sudo ip addr add 172.16.12.2/24 dev br1
+sudo ip addr add 172.16.22.2/24 dev br2  
 sudo ovs-vsctl set int br1 mtu_request=9000
 sudo ovs-vsctl set int br2 mtu_request=9000
 sudo ip link set br1 up
@@ -522,8 +530,8 @@ Vagrant.configure("2") do |config|
       s1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       s1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       s1.vm.provision "shell", privileged: false, inline: $scripts1
-      s1.vm.network "private_network", ip: "172.16.11.90", virtualbox_intnet: "s1l1"
-      s1.vm.network "private_network", ip: "172.16.12.90", virtualbox_intnet: "s1l2"  
+      s1.vm.network "private_network", ip: "172.16.11.1", virtualbox_intnet: "s1l1"
+      s1.vm.network "private_network", ip: "172.16.12.1", virtualbox_intnet: "s1l2"  
       s1.vm.provider :virtualbox do |vbox|
             vbox.name = "S1"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
@@ -546,8 +554,8 @@ Vagrant.configure("2") do |config|
       s2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       s2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       s2.vm.provision "shell", privileged: false, inline: $scripts2
-      s2.vm.network "private_network", ip: "172.16.21.90", virtualbox_intnet: "s2l1"
-      s2.vm.network "private_network", ip: "172.16.22.90", virtualbox_intnet: "s2l2"
+      s2.vm.network "private_network", ip: "172.16.21.1", virtualbox_intnet: "s2l1"
+      s2.vm.network "private_network", ip: "172.16.22.1", virtualbox_intnet: "s2l2"
       s2.vm.provider :virtualbox do |vbox|
             vbox.name = "S2"
             vbox.customize ["modifyvm", :id, "--cpus", 2]
@@ -570,8 +578,8 @@ Vagrant.configure("2") do |config|
       l1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       l1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       l1.vm.provision "shell", privileged: false, inline: $scriptl1
-      l1.vm.network "private_network", ip: "172.16.11.100", virtualbox_intnet: "s1l1"
-      l1.vm.network "private_network", ip: "172.16.21.100", virtualbox_intnet: "s2l1"
+      l1.vm.network "private_network", ip: "172.16.11.2", virtualbox_intnet: "s1l1"
+      l1.vm.network "private_network", ip: "172.16.21.2", virtualbox_intnet: "s2l1"
       l1.vm.provider :virtualbox do |vbox|
             vbox.name = "L1"
             vbox.customize ["modifyvm", :id, "--cpus", 8]
@@ -594,8 +602,8 @@ Vagrant.configure("2") do |config|
       l2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
       l2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
       l2.vm.provision "shell", privileged: false, inline: $scriptl2
-      l2.vm.network "private_network", ip: "172.16.12.100", virtualbox_intnet: "s1l2"
-      l2.vm.network "private_network", ip: "172.16.22.100", virtualbox_intnet: "s2l2"
+      l2.vm.network "private_network", ip: "172.16.12.2", virtualbox_intnet: "s1l2"
+      l2.vm.network "private_network", ip: "172.16.22.2", virtualbox_intnet: "s2l2"
       l2.vm.provider :virtualbox do |vbox|
             vbox.name = "L2"
             vbox.customize ["modifyvm", :id, "--cpus", 8]
