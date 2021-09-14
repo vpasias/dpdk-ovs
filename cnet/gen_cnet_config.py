@@ -18,29 +18,42 @@ interface lo
 {% if rr_router %}
 router bgp 65000
  bgp router-id {{ local_loopback }}
- bgp bestpath as-path multipath-relax
- bgp bestpath compare-routerid
- neighbor fabric peer-group
- neighbor fabric remote-as external
- neighbor fabric description Internal Fabric Network
- neighbor fabric capability extended-nexthop
- neighbor br1 interface peer-group fabric
- neighbor br2 interface peer-group fabric
+ no bgp default ipv4-unicast
+ neighbor LEAF1 peer-group
+ neighbor LEAF1 remote-as 65001
+ neighbor LEAF1 description Leaf Switch 1
+ neighbor LEAF1 capability extended-nexthop
+ neighbor LEAF2 peer-group
+ neighbor LEAF2 remote-as 65002
+ neighbor LEAF2 description Leaf Switch 2
+ neighbor LEAF2 capability extended-nexthop 
+ neighbor 172.16.11.2 peer-group LEAF1
+ neighbor 172.16.21.2 peer-group LEAF1
+ neighbor 172.16.12.2 peer-group LEAF2
+ neighbor 172.16.22.2 peer-group LEAF2
  !
  address-family ipv4 unicast
-  no neighbor fabric activate
   network {{ local_loopback }}/32
+  neighbor LEAF1 activate
+  neighbor LEAF1 allowas-in
+  neighbor LEAF2 activate
+  neighbor LEAF2 allowas-in  
  exit-address-family
  !
  address-family ipv6 unicast
-  no neighbor fabric activate
+  network {{ local_loopback_ipv6 }}/32
+  neighbor LEAF1 activate
+  neighbor LEAF1 allowas-in
+  neighbor LEAF2 activate
+  neighbor LEAF2 allowas-in
  exit-address-family
  !
  address-family l2vpn evpn
-  neighbor fabric activate
+  neighbor LEAF1 activate
+  neighbor LEAF1 allowas-in
+  neighbor LEAF2 activate
+  neighbor LEAF2 allowas-in 
   advertise-all-vni
-  advertise ipv4 unicast
-  advertise ipv6 unicast  
  exit-address-family
 !
 {% endif %}
@@ -55,35 +68,33 @@ vrf vrf_cust2
 !
 router bgp {{ as_number }}
  bgp router-id {{ local_loopback }}
- bgp bestpath as-path multipath-relax
- bgp bestpath compare-routerid
- neighbor fabric peer-group
- neighbor fabric remote-as external
- neighbor fabric description Internal Fabric Network
- neighbor fabric capability extended-nexthop
- neighbor br1 interface peer-group fabric
- neighbor br2 interface peer-group fabric
+ no bgp default ipv4-unicast
+ neighbor SPINE peer-group
+ neighbor SPINE remote-as 65000
+ neighbor SPINE description Internal Fabric Network
+ neighbor SPINE capability extended-nexthop
+ neighbor 172.16.11.1 peer-group SPINE
+ neighbor 172.16.21.1 peer-group SPINE
+ neighbor 172.16.12.1 peer-group SPINE
+ neighbor 172.16.22.1 peer-group SPINE
  !
  address-family ipv4 unicast
-  no neighbor fabric activate
   network {{ local_loopback }}/32
-#  no neighbor fabric prefix-list host-routes-out out  
+  neighbor SPINE activate
+  neighbor SPINE allowas-in
  exit-address-family
  !
  address-family ipv6 unicast
-  no neighbor fabric activate
+  network {{ local_loopback_ipv6 }}/32
+  neighbor SPINE activate
+  neighbor SPINE allowas-in
  exit-address-family
  !
  address-family l2vpn evpn
-  neighbor fabric activate
-#  neighbor fabric prefix-list host-routes-out out
+  neighbor SPINE activate
+  neighbor SPINE allowas-in 
   advertise-all-vni
-  advertise ipv4 unicast
-  advertise ipv6 unicast  
  exit-address-family
-!
-ip prefix-list host-routes-out seq 100 permit {{ local_loopback }}/32
-ip prefix-list host-routes-out seq 200 deny 0.0.0.0/0 le 32
 !
 router bgp {{ as_number }} vrf vrf_cust1
  address-family l2vpn evpn
