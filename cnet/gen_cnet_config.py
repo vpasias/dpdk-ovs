@@ -76,6 +76,10 @@ vrf vrf_cust2
  vni 4001
  exit-vrf
 !
+vrf vrf_cust3
+ vni 4002
+ exit-vrf
+!
 interface lo
  ip address {{ local_loopback }}
  ip address {{ local_loopback_ipv6 }}
@@ -123,6 +127,20 @@ router bgp {{ as_number }} vrf vrf_cust1
  exit-address-family
  ! 
 router bgp {{ as_number }} vrf vrf_cust2
+ address-family l2vpn evpn
+  advertise ipv4 unicast
+  advertise ipv6 unicast  
+ exit-address-family
+!
+ address-family ipv4 unicast
+  redistribute connected
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  redistribute connected
+ exit-address-family
+ !
+router bgp {{ as_number }} vrf vrf_cust3
  address-family l2vpn evpn
   advertise ipv4 unicast
   advertise ipv6 unicast  
