@@ -3,7 +3,7 @@
 X=$(hostname)
 case "$X" in
     S*)
-        fab_ints=("br1" "br2")
+        fab_ints=("br1" "br2" "br3")
         loopback_addr="${X: -1}"
         router_type="s"
         ;;
