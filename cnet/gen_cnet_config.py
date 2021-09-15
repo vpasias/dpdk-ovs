@@ -98,12 +98,18 @@ router bgp {{ as_number }}
   network {{ local_loopback }}/32
   neighbor SPINE activate
   neighbor SPINE allowas-in
+  import vrf vrf_cust1
+  import vrf vrf_cust2
+  import vrf vrf_cust3  
  exit-address-family
  !
  address-family ipv6 unicast
   network {{ local_loopback_ipv6 }}/32
   neighbor SPINE activate
   neighbor SPINE allowas-in
+  import vrf vrf_cust1
+  import vrf vrf_cust2
+  import vrf vrf_cust3  
  exit-address-family
  !
  address-family l2vpn evpn
@@ -115,7 +121,9 @@ router bgp {{ as_number }}
 router bgp {{ as_number }} vrf vrf_cust1
  address-family l2vpn evpn
   advertise ipv4 unicast
-  advertise ipv6 unicast    
+  advertise ipv6 unicast
+  default-originate ipv4
+  default-originate ipv6  
  exit-address-family
 !
  address-family ipv4 unicast
@@ -129,7 +137,9 @@ router bgp {{ as_number }} vrf vrf_cust1
 router bgp {{ as_number }} vrf vrf_cust2
  address-family l2vpn evpn
   advertise ipv4 unicast
-  advertise ipv6 unicast  
+  advertise ipv6 unicast
+  default-originate ipv4
+  default-originate ipv6  
  exit-address-family
 !
  address-family ipv4 unicast
@@ -143,7 +153,9 @@ router bgp {{ as_number }} vrf vrf_cust2
 router bgp {{ as_number }} vrf vrf_cust3
  address-family l2vpn evpn
   advertise ipv4 unicast
-  advertise ipv6 unicast  
+  advertise ipv6 unicast
+  default-originate ipv4
+  default-originate ipv6
  exit-address-family
 !
  address-family ipv4 unicast
