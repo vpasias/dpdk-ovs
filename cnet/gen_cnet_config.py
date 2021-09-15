@@ -14,6 +14,7 @@ username iason nopassword
 !
 interface lo
  ip address {{ local_loopback }}
+ ip address {{ local_loopback_ipv6 }} 
 !
 {% if rr_router %}
 router bgp 65000
@@ -26,16 +27,23 @@ router bgp 65000
  neighbor LEAF2 peer-group
  neighbor LEAF2 remote-as {{ leaf2_as }}
  neighbor LEAF2 description Leaf Switch 2
- neighbor LEAF2 capability extended-nexthop 
+ neighbor LEAF2 capability extended-nexthop
+ neighbor LEAF3 peer-group
+ neighbor LEAF3 remote-as {{ leaf3_as }}
+ neighbor LEAF3 description Leaf Switch 3
+ neighbor LEAF3 capability extended-nexthop  
  neighbor {{ leaf1_address }} peer-group LEAF1
  neighbor {{ leaf2_address }} peer-group LEAF2
+ neighbor {{ leaf3_address }} peer-group LEAF3 
  !
  address-family ipv4 unicast
   network {{ local_loopback }}/32
   neighbor LEAF1 activate
   neighbor LEAF1 allowas-in
   neighbor LEAF2 activate
-  neighbor LEAF2 allowas-in  
+  neighbor LEAF2 allowas-in
+  neighbor LEAF3 activate
+  neighbor LEAF3 allowas-in
  exit-address-family
  !
  address-family ipv6 unicast
@@ -44,13 +52,17 @@ router bgp 65000
   neighbor LEAF1 allowas-in
   neighbor LEAF2 activate
   neighbor LEAF2 allowas-in
+  neighbor LEAF3 activate
+  neighbor LEAF3 allowas-in
  exit-address-family
  !
  address-family l2vpn evpn
   neighbor LEAF1 activate
   neighbor LEAF1 allowas-in
   neighbor LEAF2 activate
-  neighbor LEAF2 allowas-in 
+  neighbor LEAF2 allowas-in
+  neighbor LEAF3 activate
+  neighbor LEAF3 allowas-in
   advertise-all-vni
  exit-address-family
 !
@@ -63,6 +75,10 @@ vrf vrf_cust1
 vrf vrf_cust2
  vni 4001
  exit-vrf
+!
+interface lo
+ ip address {{ local_loopback }}
+ ip address {{ local_loopback_ipv6 }}
 !
 router bgp {{ as_number }}
  bgp router-id {{ local_loopback }}
@@ -127,8 +143,8 @@ bfd
 line vty
 !'''
 mpls_int_map = {
-    'S1': ['br1', 'br2'],
-    'S2': ['br1', 'br2'],
+    'S1': ['br1', 'br2', 'br3'],
+    'S2': ['br1', 'br2', 'br3'],
     'L1': ['br1', 'br2'],
     'L2': ['br1', 'br2']
     }
@@ -199,25 +215,29 @@ if edge_router:
     elif lo_octets[-1] == '102':
         as_number = 65002
         spine1_address = '172.16.12.1'
-        spine2_address = '172.16.22.1'      
+        spine2_address = '172.16.22.1'
+    elif lo_octets[-1] == '103':
+        as_number = 65003
+        spine1_address = '172.16.13.1'
+        spine2_address = '172.16.23.1'         
     else:
         raise ValueError('unacceptable loopback address {}'.format(
             local_loopback.compressed))  
 if rr_router:
-    if lo_octets[-1] == '1':
-        neighbor1_last_octet = '101'        
-        neighbor2_last_octet = '102'
+    leaf1_as = '65001'
+    leaf2_as = '65002'
+    leaf3_as = '65003'
+    neighbor1_last_octet = '101'
+    neighbor2_last_octet = '102'
+    neighbor3_last_octet = '103' 
+    if lo_octets[-1] == '1':   
         leaf1_address = '172.16.11.2'
         leaf2_address = '172.16.12.2'
-        leaf1_as = '65001'
-        leaf2_as = '65002'
-    elif lo_octets[-1] == '2':
-        neighbor1_last_octet = '101'        
-        neighbor2_last_octet = '102'
+        leaf3_address = '172.16.13.2'        
+    elif lo_octets[-1] == '2':     
         leaf1_address = '172.16.21.2'
         leaf2_address = '172.16.22.2'
-        leaf1_as = '65001'
-        leaf2_as = '65002'        
+        leaf3_address = '172.16.23.2'        
     else:
         raise ValueError('unacceptable loopback address {}'.format(
             local_loopback.compressed))
@@ -227,6 +247,9 @@ if rr_router:
     neighbor2_octets = lo_octets[:-1]
     neighbor2_octets.append(neighbor2_last_octet)
     neighbor2_loopback = ipaddress.ip_address('.'.join(neighbor2_octets))
+    neighbor3_octets = lo_octets[:-1]
+    neighbor3_octets.append(neighbor3_last_octet)
+    neighbor3_loopback = ipaddress.ip_address('.'.join(neighbor3_octets))    
 iso_net = [prepend_octet(x) for x in local_loopback.compressed.split('.')]
 iso_net = ''.join(iso_net)
 step = 0
@@ -263,10 +286,13 @@ if rr_router:
                                local_loopback=local_loopback.compressed,
                                neighbor1_loopback=neighbor1_loopback,
                                neighbor2_loopback=neighbor2_loopback,
+                               neighbor3_loopback=neighbor3_loopback,
                                leaf1_address=leaf1_address,
                                leaf2_address=leaf2_address,
+                               leaf3_address=leaf3_address,                  
                                leaf1_as=leaf1_as,
-                               leaf2_as=leaf2_as,                              
+                               leaf2_as=leaf2_as,
+                               leaf3_as=leaf3_as,
                                iso_net=iso_net,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
