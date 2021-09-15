@@ -20,17 +20,15 @@ router bgp 65000
  bgp router-id {{ local_loopback }}
  no bgp default ipv4-unicast
  neighbor LEAF1 peer-group
- neighbor LEAF1 remote-as 65001
+ neighbor LEAF1 remote-as {{ leaf1_as }}
  neighbor LEAF1 description Leaf Switch 1
  neighbor LEAF1 capability extended-nexthop
  neighbor LEAF2 peer-group
- neighbor LEAF2 remote-as 65002
+ neighbor LEAF2 remote-as {{ leaf2_as }}
  neighbor LEAF2 description Leaf Switch 2
  neighbor LEAF2 capability extended-nexthop 
- neighbor 172.16.11.2 peer-group LEAF1
- neighbor 172.16.21.2 peer-group LEAF1
- neighbor 172.16.12.2 peer-group LEAF2
- neighbor 172.16.22.2 peer-group LEAF2
+ neighbor {{ leaf1_address }} peer-group LEAF1
+ neighbor {{ leaf2_address }} peer-group LEAF2
  !
  address-family ipv4 unicast
   network {{ local_loopback }}/32
@@ -70,13 +68,11 @@ router bgp {{ as_number }}
  bgp router-id {{ local_loopback }}
  no bgp default ipv4-unicast
  neighbor SPINE peer-group
- neighbor SPINE remote-as 65000
+ neighbor SPINE remote-as {{ spine_as }}
  neighbor SPINE description Internal Fabric Network
  neighbor SPINE capability extended-nexthop
- neighbor 172.16.11.1 peer-group SPINE
- neighbor 172.16.21.1 peer-group SPINE
- neighbor 172.16.12.1 peer-group SPINE
- neighbor 172.16.22.1 peer-group SPINE
+ neighbor {{ spine1_address }} peer-group SPINE
+ neighbor {{ spine2_address }} peer-group SPINE
  !
  address-family ipv4 unicast
   network {{ local_loopback }}/32
@@ -195,10 +191,15 @@ neighbor_loopback = ipaddress.ip_address('127.0.0.27')
 if edge_router:
     rr1_loopback = '172.16.250.1'
     rr2_loopback = '172.16.250.2'
+    spine_as = 65000
     if lo_octets[-1] == '101':
-        as_number = 65001        
+        as_number = 65001
+        spine1_address = '172.16.11.1'
+        spine2_address = '172.16.21.1'
     elif lo_octets[-1] == '102':
         as_number = 65002
+        spine1_address = '172.16.12.1'
+        spine2_address = '172.16.22.1'      
     else:
         raise ValueError('unacceptable loopback address {}'.format(
             local_loopback.compressed))  
@@ -206,9 +207,17 @@ if rr_router:
     if lo_octets[-1] == '1':
         neighbor1_last_octet = '101'        
         neighbor2_last_octet = '102'
+        leaf1_address = '172.16.11.2'
+        leaf2_address = '172.16.12.2'
+        leaf1_as = '65001'
+        leaf2_as = '65002'
     elif lo_octets[-1] == '2':
         neighbor1_last_octet = '101'        
-        neighbor2_last_octet = '102'    
+        neighbor2_last_octet = '102'
+        leaf1_address = '172.16.21.2'
+        leaf2_address = '172.16.22.2'
+        leaf1_as = '65001'
+        leaf2_as = '65002'        
     else:
         raise ValueError('unacceptable loopback address {}'.format(
             local_loopback.compressed))
@@ -234,7 +243,10 @@ if edge_router:
                                local_loopback=local_loopback.compressed,
                                rr1_loopback=rr1_loopback,
                                rr2_loopback=rr2_loopback,
+                               spine1_address=spine1_address,
+                               spine2_address=spine2_address,                              
                                as_number=as_number,
+                               spine_as=spine_as,                               
                                iso_net=iso_net,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
@@ -251,6 +263,10 @@ if rr_router:
                                local_loopback=local_loopback.compressed,
                                neighbor1_loopback=neighbor1_loopback,
                                neighbor2_loopback=neighbor2_loopback,
+                               leaf1_address=leaf1_address,
+                               leaf2_address=leaf2_address,
+                               leaf1_as=leaf1_as,
+                               leaf2_as=leaf2_as,                              
                                iso_net=iso_net,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
