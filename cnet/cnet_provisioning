@@ -60,7 +60,7 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install bridge-utils cpu-checker --no-install-recommends
     # Tenant 1
     sudo ip link add vxlan100 type vxlan id 100 local 172.16.250."$loopback_addr" dstport 4789 nolearning
-    sudo ip link set dev vxlan100 mtu 1550
+    sudo ip link set dev vxlan100 mtu 1650
     sudo ip link set vxlan100 up
     sudo brctl addbr br100
     sudo brctl addif br100 vxlan100
@@ -71,7 +71,7 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo brctl addbr br4000
     sudo brctl addif br4000 vxlan4000
     sudo ip link set dev br4000 up
-    sudo ip link set dev vxlan4000 mtu 1550
+    sudo ip link set dev vxlan4000 mtu 1650
     sudo ip link set vxlan4000 up
     sudo ip link add vrf_cust1 type vrf table 100
     sudo ip link set vrf_cust1 up
@@ -79,7 +79,7 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo ip link set br4000 master vrf_cust1
     # Tenant 2
     sudo ip link add vxlan200 type vxlan id 200 local 172.16.250."$loopback_addr" dstport 4789 nolearning
-    sudo ip link set dev vxlan200 mtu 1550
+    sudo ip link set dev vxlan200 mtu 1650
     sudo ip link set vxlan200 up
     sudo brctl addbr br200
     sudo brctl addif br200 vxlan200
@@ -90,7 +90,7 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo brctl addbr br4001
     sudo brctl addif br4001 vxlan4001
     sudo ip link set dev br4001 up
-    sudo ip link set dev vxlan4001 mtu 1550
+    sudo ip link set dev vxlan4001 mtu 1650
     sudo ip link set vxlan4001 up
     sudo ip link add vrf_cust2 type vrf table 200
     sudo ip link set vrf_cust2 up
@@ -98,7 +98,7 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo ip link set br4001 master vrf_cust2
     # Tenant 3
     sudo ip link add vxlan300 type vxlan id 300 local 172.16.250."$loopback_addr" dstport 4789 nolearning
-    sudo ip link set dev vxlan300 mtu 1550
+    sudo ip link set dev vxlan300 mtu 1650
     sudo ip link set vxlan300 up
     sudo brctl addbr br300
     sudo brctl addif br300 vxlan300
@@ -109,7 +109,7 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo brctl addbr br4002
     sudo brctl addif br4002 vxlan4002
     sudo ip link set dev br4002 up
-    sudo ip link set dev vxlan4002 mtu 1550
+    sudo ip link set dev vxlan4002 mtu 1650
     sudo ip link set vxlan4002 up
     sudo ip link add vrf_cust3 type vrf table 300
     sudo ip link set vrf_cust3 up
