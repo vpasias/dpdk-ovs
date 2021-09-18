@@ -36,7 +36,8 @@ if [[ !("$router_type" =~ "n") ]]; then
     python --version
     python3 --version
     sudo apt update && sudo apt install frr frr-pythontools -y
-    echo -e 'zebra=yes\nbgpd=yes\nbfdd=yes' > frr-daemons
+    #echo -e 'zebra=yes\nbgpd=yes\nbfdd=yes' > frr-daemons
+    echo -e 'zebra=yes\nbgpd=yes\nospfd=yes\nbfdd=yes' > frr-daemons
     sudo mv frr-daemons /etc/frr/daemons
     python3 gen_cnet_config.py
     sudo mv frr_generated_config /etc/frr/frr.conf
