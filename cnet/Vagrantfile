@@ -739,7 +739,7 @@ Vagrant.configure("2") do |config|
       l2.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
       l2.vm.provision "shell", path: "cnet_provisioning"
   end
-  config.vm.define "l3" do |l2|
+  config.vm.define "l3" do |l3|
       l3.vm.box = "unf"
       l3.vm.hostname = "L3"
       l3.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
