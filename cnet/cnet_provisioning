@@ -60,6 +60,7 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install bridge-utils cpu-checker --no-install-recommends
     # Tenant 1
     sudo ip link add vxlan100 type vxlan id 100 local 172.16.250."$loopback_addr" dstport 4789 nolearning
+    # Change to MTU=1650 from MTU=1550
     sudo ip link set dev vxlan100 mtu 1650
     sudo ip link set vxlan100 up
     sudo brctl addbr br100
