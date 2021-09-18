@@ -31,10 +31,13 @@ router bgp 65010
  neighbor {{ neighbor1_loopback }} update-source {{ local_loopback }}
  neighbor {{ neighbor2_loopback }} remote-as 65010
  neighbor {{ neighbor2_loopback }} update-source {{ local_loopback }}
+ neighbor {{ neighbor3_loopback }} remote-as 65010
+ neighbor {{ neighbor3_loopback }} update-source {{ local_loopback }}
  !
  address-family ipv4 unicast
   no neighbor {{ neighbor1_loopback }} activate
   no neighbor {{ neighbor2_loopback }} activate
+  no neighbor {{ neighbor3_loopback }} activate
  exit-address-family
  !
  address-family l2vpn evpn
@@ -42,6 +45,8 @@ router bgp 65010
   neighbor {{ neighbor1_loopback }} route-reflector-client
   neighbor {{ neighbor2_loopback }} activate
   neighbor {{ neighbor2_loopback }} route-reflector-client
+  neighbor {{ neighbor3_loopback }} activate
+  neighbor {{ neighbor3_loopback }} route-reflector-client  
  exit-address-family
 !
 {% endif %}
@@ -170,21 +175,18 @@ if edge_router:
     rr1_loopback = '172.16.250.1'
     rr2_loopback = '172.16.250.2'
 if rr_router:
-    if lo_octets[-1] == '1':
-        neighbor1_last_octet = '101'        
-        neighbor2_last_octet = '102'  
-    elif lo_octets[-1] == '2':
-        neighbor1_last_octet = '101'        
-        neighbor2_last_octet = '102'    
-    else:
-        raise ValueError('unacceptable loopback address {}'.format(
-            local_loopback.compressed))
+    neighbor1_last_octet = '101'        
+    neighbor2_last_octet = '102' 
+    neighbor3_last_octet = '103' 
     neighbor1_octets = lo_octets[:-1]
     neighbor1_octets.append(neighbor1_last_octet)
     neighbor1_loopback = ipaddress.ip_address('.'.join(neighbor1_octets))
     neighbor2_octets = lo_octets[:-1]
     neighbor2_octets.append(neighbor2_last_octet)
     neighbor2_loopback = ipaddress.ip_address('.'.join(neighbor2_octets))
+    neighbor3_octets = lo_octets[:-1]
+    neighbor3_octets.append(neighbor3_last_octet)
+    neighbor3_loopback = ipaddress.ip_address('.'.join(neighbor3_octets))    
 iso_net = [prepend_octet(x) for x in local_loopback.compressed.split('.')]
 iso_net = ''.join(iso_net)
 step = 0
@@ -217,6 +219,7 @@ if rr_router:
                                local_loopback=local_loopback.compressed,
                                neighbor1_loopback=neighbor1_loopback,
                                neighbor2_loopback=neighbor2_loopback,
+                               neighbor3_loopback=neighbor3_loopback,
                                iso_net=iso_net,
                                local_loopback_ipv6=local_loopback_ipv6
                                )
