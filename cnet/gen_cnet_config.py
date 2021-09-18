@@ -107,7 +107,8 @@ mpls_int_map = {
     'S1': ['br1', 'br2', 'br3'],
     'S2': ['br1', 'br2', 'br3'],
     'L1': ['br1', 'br2'],
-    'L2': ['br1', 'br2']
+    'L2': ['br1', 'br2'],
+    'L3': ['br1', 'br2']
     }
 
 def prepend_octet(octet):
