@@ -6,7 +6,7 @@ from jinja2 import Template
 # https://codingpackets.com/blog/linux-routing-on-the-host-with-frr/
 
 frr_config_template = '''frr version {{ frr_version }}
-frr defaults traditional
+frr defaults datacenter
 hostname {{ router_hostname }}
 log syslog informational
 service integrated-vtysh-config
