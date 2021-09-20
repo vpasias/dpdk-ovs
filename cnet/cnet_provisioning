@@ -26,6 +26,14 @@ sudo ip addr add 172.16.250."$loopback_addr"/32 dev lo
 sudo ip -6 addr add 5000::"$loopback_addr"/128 dev lo
 sudo chmod 644 /usr/share/keyrings/*
 sudo apt update -y
+cat >/etc/hosts <<EOF
+127.0.0.1 localhost
+172.16.250.1 s1
+172.16.250.2 s2
+172.16.250.101 l1
+172.16.250.102 l2
+172.16.250.103 l3
+EOF
 if [[ !("$router_type" =~ "n") ]]; then
     sudo sysctl net.ipv4.ip_forward=1
     sudo sysctl net.ipv4.conf.all.forwarding=1
