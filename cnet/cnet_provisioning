@@ -24,6 +24,12 @@ esac
 
 sudo ip addr add 172.16.250."$loopback_addr"/32 dev lo
 sudo ip -6 addr add 5000::"$loopback_addr"/128 dev lo
+sudo ip link add name slo type dummy
+sudo ip link set slo up
+sudo ip addr add 172.16.251."$loopback_addr"/32 dev slo
+sudo ip link add name clo type dummy
+sudo ip link set clo up
+sudo ip addr add 172.16.252."$loopback_addr"/32 dev clo
 sudo chmod 644 /usr/share/keyrings/*
 sudo apt update -y
 cat >/etc/hosts <<EOF
@@ -33,12 +39,26 @@ cat >/etc/hosts <<EOF
 172.16.250.101 l1
 172.16.250.102 l2
 172.16.250.103 l3
+172.16.251.101 sl1
+172.16.251.102 sl2
+172.16.251.103 sl3
+172.16.252.101 sl1
+172.16.252.102 sl2
+172.16.252.103 sl3
 EOF
 if [[ !("$router_type" =~ "n") ]]; then
     sudo sysctl net.ipv4.ip_forward=1
     sudo sysctl net.ipv4.conf.all.forwarding=1
     sudo sysctl net.ipv6.conf.all.disable_ipv6=0
     sudo sysctl net.ipv6.conf.all.forwarding=1
+    if [[ "$router_type" =~ "s" ]]; then
+    sudo sysctl net.ipv4.conf.br1.rp_filter=0
+    sudo sysctl net.ipv4.conf.br2.rp_filter=0
+    sudo sysctl net.ipv4.conf.br3.rp_filter=0
+    else
+    sudo sysctl net.ipv4.conf.br1.rp_filter=0
+    sudo sysctl net.ipv4.conf.br2.rp_filter=0
+    fi
     curl -s https://deb.frrouting.org/frr/keys.asc | sudo apt-key add -
     echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
     python --version
