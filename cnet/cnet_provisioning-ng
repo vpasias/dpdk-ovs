@@ -104,7 +104,7 @@ if [[ !("$router_type" =~ "n") ]]; then
     #echo -e 'zebra=yes\nbgpd=yes\nbfdd=yes' > frr-daemons
     echo -e 'zebra=yes\nbgpd=yes\nospfd=yes\nbfdd=yes\nstaticd=yes' > frr-daemons
     sudo mv frr-daemons /etc/frr/daemons
-    python3 gen_cnet_config.py
+    python3 gen_cnet_config-ng.py
     sudo mv frr_generated_config /etc/frr/frr.conf
     sudo chown frr:frr /etc/frr/daemons
     sudo chown frr:frr /etc/frr/frr.conf
