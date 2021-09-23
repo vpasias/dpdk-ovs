@@ -38,16 +38,20 @@ interface {{ interface }}
  ip ospf dead-interval 40
 !
 {% endfor %}
+{% if sto_router %}
+interface lo
+ ip ospf area 1
+!
+{% endif %}
+{% if clu_router %}
+interface lo
+ ip ospf area 2
+!
+{% endif %}
+{% if rr_router %}
 interface lo
  ip ospf area 0
 !
-interface slo
- ip ospf area 0
-!
-interface clo
- ip ospf area 0
-!
-{% if rr_router %}
 router bgp 65010
  bgp router-id {{ local_loopback }}
  bgp log-neighbor-changes
@@ -73,8 +77,22 @@ router bgp 65010
   neighbor {{ neighbor3_loopback }} route-reflector-client  
  exit-address-family
 !
+router ospf
+ ospf router-id {{ local_loopback }}
+ network 172.16.0.0/16 area 0
+ router-info area
+!
 {% endif %}
 {% if edge_router %}
+interface lo
+ ip ospf area 0
+!
+interface slo
+ ip ospf area 1
+!
+interface clo
+ ip ospf area 2
+!
 vrf vrf_cust1
  vni 4000
  exit-vrf
@@ -135,12 +153,32 @@ router bgp 65010 vrf vrf_cust3
  exit-address-family
  ! 
 !
-{% endif %}
 router ospf
  ospf router-id {{ local_loopback }}
  network 172.16.0.0/16 area 0
+ area 1 nssa
+ network 172.18.0.0/16 area 1
+ area 2 nssa
+ network 172.19.0.0/16 area 2
  router-info area
 !
+{% endif %}
+{% if sto_router %}
+router ospf
+ ospf router-id {{ local_loopback }}
+ area 1 nssa
+ network 172.18.0.0/16 area 1 
+ router-info area
+!
+{% endif %}
+{% if clu_router %}
+router ospf
+ ospf router-id {{ local_loopback }}
+ area 2 nssa
+ network 172.19.0.0/16 area 2
+ router-info area
+!
+{% endif %}
 bfd
 !
 line vty
@@ -191,6 +229,8 @@ sto_interfaces = sto_int_map[router_hostname]
 clu_interfaces = clu_int_map[router_hostname]
 rr_router = True if 'S' in router_hostname else False
 edge_router = True if 'L' in router_hostname else False
+sto_router = True if 'A' in router_hostname else False
+clu_router = True if 'C' in router_hostname else False
 
 loopback_addr_run = subprocess.run(['ip', '-br', 'address', 'show', 'lo'],
                                    stdout=subprocess.PIPE)
@@ -282,3 +322,29 @@ if rr_router:
         for line in rendered.split('\n'):
             if line.strip():
                 config_file.write(line+'\n')
+if sto_router:
+    template = Template(frr_config_template)
+    rendered = template.render(frr_version=frr_version,
+                               router_hostname=router_hostname,
+                               sto_interfaces=sto_interfaces,
+                               local_loopback=local_loopback.compressed,
+                               iso_net=iso_net,
+                               local_loopback_ipv6=local_loopback_ipv6
+                               )
+    with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
+        for line in rendered.split('\n'):
+            if line.strip():
+                config_file.write(line+'\n')
+if clu_router:
+    template = Template(frr_config_template)
+    rendered = template.render(frr_version=frr_version,
+                               router_hostname=router_hostname,
+                               clu_interfaces=clu_interfaces,
+                               local_loopback=local_loopback.compressed,
+                               iso_net=iso_net,
+                               local_loopback_ipv6=local_loopback_ipv6
+                               )
+    with open('frr_generated_config', 'w', encoding='utf-8') as config_file:
+        for line in rendered.split('\n'):
+            if line.strip():
+                config_file.write(line+'\n')          
