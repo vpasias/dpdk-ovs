@@ -35,6 +35,41 @@ esac
 if [[ "$router_type" =~ "l" ]]; then
 sudo ip addr add 172.16.250."$loopback_addr"/32 dev lo
 sudo ip -6 addr add 5000::"$loopback_addr"/128 dev lo
+sudo ip link add name slo type dummy
+sudo ip link set slo up
+sudo ip addr add 172.18.250."$loopback_addr"/32 dev slo
+sudo ip -6 addr add 5001::"$loopback_addr"/128 dev slo
+sudo ip link add name clo type dummy
+sudo ip link set clo up
+sudo ip addr add 172.19.250."$loopback_addr"/32 dev clo
+sudo ip -6 addr add 5002::"$loopback_addr"/128 dev clo
+sudo sysctl net.ipv4.conf.br1.rp_filter=0
+sudo sysctl net.ipv4.conf.br2.rp_filter=0
+sudo sysctl net.ipv4.conf.br3.rp_filter=0
+sudo sysctl net.ipv4.conf.br4.rp_filter=0
+sudo sysctl net.ipv4.conf.br5.rp_filter=0
+sudo sysctl net.ipv4.conf.br6.rp_filter=0
+fi
+if [[ "$router_type" =~ "s" ]]; then
+sudo ip addr add 172.16.250."$loopback_addr"/32 dev lo
+sudo ip -6 addr add 5000::"$loopback_addr"/128 dev lo
+sudo sysctl net.ipv4.conf.br1.rp_filter=0
+sudo sysctl net.ipv4.conf.br2.rp_filter=0
+sudo sysctl net.ipv4.conf.br3.rp_filter=0
+fi
+if [[ "$router_type" =~ "a" ]]; then
+sudo ip addr add 172.18.250."$loopback_addr"/32 dev lo
+sudo ip -6 addr add 5001::"$loopback_addr"/128 dev lo
+sudo sysctl net.ipv4.conf.br1.rp_filter=0
+sudo sysctl net.ipv4.conf.br2.rp_filter=0
+sudo sysctl net.ipv4.conf.br3.rp_filter=0
+fi
+if [[ "$router_type" =~ "c" ]]; then
+sudo ip addr add 172.19.250."$loopback_addr"/32 dev lo
+sudo ip -6 addr add 5002::"$loopback_addr"/128 dev lo
+sudo sysctl net.ipv4.conf.br1.rp_filter=0
+sudo sysctl net.ipv4.conf.br2.rp_filter=0
+sudo sysctl net.ipv4.conf.br3.rp_filter=0
 fi
 sudo chmod 644 /usr/share/keyrings/*
 sudo apt update -y
@@ -61,18 +96,6 @@ if [[ !("$router_type" =~ "n") ]]; then
     sudo sysctl net.ipv4.conf.all.forwarding=1
     sudo sysctl net.ipv6.conf.all.disable_ipv6=0
     sudo sysctl net.ipv6.conf.all.forwarding=1
-    if [[ "$router_type" =~ "s" ]]; then
-    sudo sysctl net.ipv4.conf.br1.rp_filter=0
-    sudo sysctl net.ipv4.conf.br2.rp_filter=0
-    sudo sysctl net.ipv4.conf.br3.rp_filter=0
-    else
-    sudo sysctl net.ipv4.conf.br1.rp_filter=0
-    sudo sysctl net.ipv4.conf.br2.rp_filter=0
-    sudo sysctl net.ipv4.conf.br3.rp_filter=0
-    sudo sysctl net.ipv4.conf.br4.rp_filter=0
-    sudo sysctl net.ipv4.conf.br5.rp_filter=0
-    sudo sysctl net.ipv4.conf.br6.rp_filter=0    
-    fi
     curl -s https://deb.frrouting.org/frr/keys.asc | sudo apt-key add -
     echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
     python --version
@@ -95,7 +118,7 @@ else
     IFS=' ' read -ra addr <<< "$n_address"
     IFS='.' read -ra octets <<< "${addr[-1]}"
     subnet=${octets[2]}
-    sudo ip route add 172.16.0.0/16 via 172.16."$subnet".100
+    sudo ip route add 172.20.0.0/16 via 172.20."$subnet".100
     sudo apt update -y && sudo apt-get install -y iperf iperf3 mtr traceroute netcat
 fi    
 if [[ "$router_type" =~ "l" ]]; then
