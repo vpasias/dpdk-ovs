@@ -23,12 +23,6 @@ interface {{ interface }}
 interface lo
  ip ospf area 0
 !
-interface slo
- ip ospf area 0
-!
-interface clo
- ip ospf area 0
-!
 {% if rr_router %}
 router bgp 65010
  bgp router-id {{ local_loopback }}
@@ -65,10 +59,10 @@ vrf vrf_cust2
  vni 4001
  exit-vrf
 !
-ip route 172.16.251.0/24 br3
-ip route 172.16.251.0/24 br4
-ip route 172.16.252.0/24 br5
-ip route 172.16.252.0/24 br6
+vrf vrf_cust3
+ vni 4002
+ exit-vrf
+!
 router bgp 65010
  bgp router-id {{ local_loopback }}
  coalesce-time 1000
@@ -107,6 +101,15 @@ router bgp 65010 vrf vrf_cust2
   redistribute connected
  exit-address-family
  !
+router bgp 65010 vrf vrf_cust3
+ address-family l2vpn evpn
+  advertise ipv4 unicast
+ exit-address-family
+!
+ address-family ipv4 unicast
+  redistribute connected
+ exit-address-family
+ ! 
 !
 {% endif %}
 router ospf
