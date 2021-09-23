@@ -1,1 +1,766 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
 
+# Open vSwitch 	DPDK
+# 2.6.x         16.07.2
+# 2.7.x         16.11.6
+# 2.8.x         17.05.2
+# 2.9.x         17.11.2
+# 2.14.x        19.11.2
+# 2.15.x        20.11.0
+
+$scripts1 = <<SCRIPT
+set -e -x -u
+# Configure hugepages
+# You can later check if this change was successful with `cat /proc/meminfo`
+# Hugepages setup should be done as early as possible after boot
+echo 'vm.nr_hugepages=1024' | sudo tee /etc/sysctl.d/hugepages.conf
+sudo mount -t hugetlbfs none /dev/hugepages
+sudo sysctl -w vm.nr_hugepages=1024
+sudo cp /tmp/ovs-vswitchd.service /etc/systemd/system/ovs-vswitchd.service
+sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
+# Name of network interface provisioned for DPDK to bind
+export NET_IF1_NAME=enp0s8
+export NET_IF2_NAME=enp0s9
+export NET_IF3_NAME=enp0s10
+#export NET_IF4_NAME=enp0s16
+#export NET_IF5_NAME=enp0s17
+#export NET_IF6_NAME=enp0s18
+#export NET_IF7_NAME=enp0s19
+sudo apt-get -qq update
+sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
+sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
+sudo pip install six
+#### Install Golang
+wget --quiet https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
+sudo tar -zxf go1.9.1.linux-amd64.tar.gz -C /usr/local/
+echo 'export GOROOT=/usr/local/go' >> /home/vagrant/.bashrc
+echo 'export GOPATH=$HOME/go' >> /home/vagrant/.bashrc
+echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> /home/vagrant/.bashrc
+source /home/vagrant/.bashrc
+mkdir -p /home/vagrant/go/src
+rm -rf /home/vagrant/go1.9.1.linux-amd64.tar.gz
+#### Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get -qq update
+sudo apt-get -qq install -y docker-ce docker-ce-cli containerd.io
+#### Download DPDK, Open vSwitch and pktgen source
+wget --quiet https://fast.dpdk.org/rel/dpdk-19.11.2.tar.xz
+sudo tar xf dpdk-19.11.2.tar.xz -C /usr/src/
+wget --quiet http://openvswitch.org/releases/openvswitch-2.14.2.tar.gz
+sudo tar -zxf openvswitch-2.14.2.tar.gz -C /usr/src/
+wget --quiet http://www.dpdk.org/browse/apps/pktgen-dpdk/snapshot/pktgen-3.4.9.tar.gz
+sudo tar -zxf pktgen-3.4.9.tar.gz -C /usr/src/
+#### Install DPDK
+echo 'export DPDK_DIR=/usr/src/dpdk-stable-19.11.2' | sudo tee -a /root/.bashrc
+echo 'export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib' | sudo tee -a /root/.bashrc
+echo 'export DPDK_TARGET=x86_64-native-linuxapp-gcc' | sudo tee -a /root/.bashrc
+echo 'export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET' | sudo tee -a /root/.bashrc
+export DPDK_DIR=/usr/src/dpdk-stable-19.11.2
+export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib
+export DPDK_TARGET=x86_64-native-linuxapp-gcc
+export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET
+cd $DPDK_DIR
+# Build and install the DPDK library
+sudo make install T=$DPDK_TARGET DESTDIR=install
+# (Optional) Export the DPDK shared library location
+sudo sed -i 's/CONFIG_RTE_BUILD_SHARED_LIB=n/CONFIG_RTE_BUILD_SHARED_LIB=y/g' ${DPDK_DIR}/config/common_base
+# Install kernel modules
+sudo modprobe uio
+sudo insmod ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+# Make uio and igb_uio installations persist across reboots
+sudo ln -sf ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko /lib/modules/`uname -r`
+sudo depmod -a
+echo "uio" | sudo tee -a /etc/modules
+echo "igb_uio" | sudo tee -a /etc/modules
+# Bind secondary network adapter
+# Note that this NIC setup does not persist across reboots
+sudo ifconfig ${NET_IF1_NAME} down
+sudo ifconfig ${NET_IF2_NAME} down
+sudo ifconfig ${NET_IF3_NAME} down
+#sudo ifconfig ${NET_IF4_NAME} down
+#sudo ifconfig ${NET_IF5_NAME} down
+#sudo ifconfig ${NET_IF6_NAME} down
+#sudo ifconfig ${NET_IF7_NAME} down
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF3_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF4_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF5_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF6_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF7_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
+#### Install Open vSwitch
+export OVS_DIR=/usr/src/openvswitch-2.14.2
+cd $OVS_DIR
+#./boot.sh
+CFLAGS='-march=native' sudo ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-dpdk=$DPDK_BUILD
+sudo make && sudo make install
+sudo mkdir -p /usr/local/etc/openvswitch
+sudo mkdir -p /usr/local/var/run/openvswitch
+sudo mkdir -p /usr/local/var/log/openvswitch
+sudo ovsdb-tool create /usr/local/etc/openvswitch/conf.db vswitchd/vswitch.ovsschema
+echo 'export PATH=$PATH:/usr/local/share/openvswitch/scripts' | sudo tee -a /root/.bashrc
+sudo systemctl enable ovsdb-server
+sudo systemctl start ovsdb-server
+sudo systemctl enable ovs-vswitchd
+sudo systemctl start ovs-vswitchd
+#### Cleanup
+rm -rf /home/vagrant/openvswitch-2.14.2.tar.gz /home/vagrant/dpdk-19.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
+sudo systemctl start ovsdb-server
+sudo systemctl start ovs-vswitchd
+sudo systemctl status ovsdb-server
+sudo systemctl status ovs-vswitchd
+sudo lshw -class network -businfo
+sudo ovs-vsctl --no-wait init
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="1024"
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=0x2
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
+# userspace datapath with dpdk
+sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
+sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
+sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
+sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
+#sudo ovs-vsctl add-br br4 -- set bridge br4 datapath_type=netdev
+#sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:10.0
+#sudo ovs-vsctl add-br br5 -- set bridge br5 datapath_type=netdev
+#sudo ovs-vsctl add-port br5 dpdk4 -- set Interface dpdk4 type=dpdk options:dpdk-devargs=0000:00:11.0
+#sudo ovs-vsctl add-br br6 -- set bridge br6 datapath_type=netdev
+#sudo ovs-vsctl add-port br6 dpdk5 -- set Interface dpdk5 type=dpdk options:dpdk-devargs=0000:00:12.0
+#sudo ovs-vsctl add-br br7 -- set bridge br7 datapath_type=netdev
+#sudo ovs-vsctl add-port br7 dpdk6 -- set Interface dpdk6 type=dpdk options:dpdk-devargs=0000:00:13.0
+# kernel datapath
+sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
+sudo ovs-vsctl show
+sudo ip addr add 172.16.11.1/24 dev br1
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ip link set br1 up
+sudo ip addr add 172.16.12.1/24 dev br2
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br2 up
+sudo ip addr add 172.16.13.1/24 dev br3  
+sudo ovs-vsctl set int br3 mtu_request=9000
+sudo ip link set br3 up
+#sudo ovs-vsctl set int br4 mtu_request=9000
+#sudo ip link set br4 up
+#sudo ovs-vsctl set int br5 mtu_request=9000
+#sudo ip link set br5 up
+#sudo ovs-vsctl set int br6 mtu_request=9000
+#sudo ip link set br6 up
+#sudo ovs-vsctl set int br7 mtu_request=9000
+#sudo ip link set br7 up 
+# End of scripts1
+SCRIPT
+
+$scripts2 = <<SCRIPT
+set -e -x -u
+# Configure hugepages
+# You can later check if this change was successful with `cat /proc/meminfo`
+# Hugepages setup should be done as early as possible after boot
+echo 'vm.nr_hugepages=1024' | sudo tee /etc/sysctl.d/hugepages.conf
+sudo mount -t hugetlbfs none /dev/hugepages
+sudo sysctl -w vm.nr_hugepages=1024
+sudo cp /tmp/ovs-vswitchd.service /etc/systemd/system/ovs-vswitchd.service
+sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
+# Name of network interface provisioned for DPDK to bind
+export NET_IF1_NAME=enp0s8
+export NET_IF2_NAME=enp0s9
+export NET_IF3_NAME=enp0s10
+#export NET_IF4_NAME=enp0s16
+#export NET_IF5_NAME=enp0s17
+#export NET_IF6_NAME=enp0s18
+#export NET_IF7_NAME=enp0s19
+sudo apt-get -qq update
+sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
+sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
+sudo pip install six
+#### Install Golang
+wget --quiet https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
+sudo tar -zxf go1.9.1.linux-amd64.tar.gz -C /usr/local/
+echo 'export GOROOT=/usr/local/go' >> /home/vagrant/.bashrc
+echo 'export GOPATH=$HOME/go' >> /home/vagrant/.bashrc
+echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> /home/vagrant/.bashrc
+source /home/vagrant/.bashrc
+mkdir -p /home/vagrant/go/src
+rm -rf /home/vagrant/go1.9.1.linux-amd64.tar.gz
+#### Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get -qq update
+sudo apt-get -qq install -y docker-ce docker-ce-cli containerd.io
+#### Download DPDK, Open vSwitch and pktgen source
+wget --quiet https://fast.dpdk.org/rel/dpdk-19.11.2.tar.xz
+sudo tar xf dpdk-19.11.2.tar.xz -C /usr/src/
+wget --quiet http://openvswitch.org/releases/openvswitch-2.14.2.tar.gz
+sudo tar -zxf openvswitch-2.14.2.tar.gz -C /usr/src/
+wget --quiet http://www.dpdk.org/browse/apps/pktgen-dpdk/snapshot/pktgen-3.4.9.tar.gz
+sudo tar -zxf pktgen-3.4.9.tar.gz -C /usr/src/
+#### Install DPDK
+echo 'export DPDK_DIR=/usr/src/dpdk-stable-19.11.2' | sudo tee -a /root/.bashrc
+echo 'export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib' | sudo tee -a /root/.bashrc
+echo 'export DPDK_TARGET=x86_64-native-linuxapp-gcc' | sudo tee -a /root/.bashrc
+echo 'export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET' | sudo tee -a /root/.bashrc
+export DPDK_DIR=/usr/src/dpdk-stable-19.11.2
+export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib
+export DPDK_TARGET=x86_64-native-linuxapp-gcc
+export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET
+cd $DPDK_DIR
+# Build and install the DPDK library
+sudo make install T=$DPDK_TARGET DESTDIR=install
+# (Optional) Export the DPDK shared library location
+sudo sed -i 's/CONFIG_RTE_BUILD_SHARED_LIB=n/CONFIG_RTE_BUILD_SHARED_LIB=y/g' ${DPDK_DIR}/config/common_base
+# Install kernel modules
+sudo modprobe uio
+sudo insmod ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+# Make uio and igb_uio installations persist across reboots
+sudo ln -sf ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko /lib/modules/`uname -r`
+sudo depmod -a
+echo "uio" | sudo tee -a /etc/modules
+echo "igb_uio" | sudo tee -a /etc/modules
+# Bind secondary network adapter
+# Note that this NIC setup does not persist across reboots
+sudo ifconfig ${NET_IF1_NAME} down
+sudo ifconfig ${NET_IF2_NAME} down
+sudo ifconfig ${NET_IF3_NAME} down
+#sudo ifconfig ${NET_IF4_NAME} down
+#sudo ifconfig ${NET_IF5_NAME} down
+#sudo ifconfig ${NET_IF6_NAME} down
+#sudo ifconfig ${NET_IF7_NAME} down
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF3_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF4_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF5_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF6_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF7_NAME}
+#sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
+#### Install Open vSwitch
+export OVS_DIR=/usr/src/openvswitch-2.14.2
+cd $OVS_DIR
+#./boot.sh
+CFLAGS='-march=native' sudo ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-dpdk=$DPDK_BUILD
+sudo make && sudo make install
+sudo mkdir -p /usr/local/etc/openvswitch
+sudo mkdir -p /usr/local/var/run/openvswitch
+sudo mkdir -p /usr/local/var/log/openvswitch
+sudo ovsdb-tool create /usr/local/etc/openvswitch/conf.db vswitchd/vswitch.ovsschema
+echo 'export PATH=$PATH:/usr/local/share/openvswitch/scripts' | sudo tee -a /root/.bashrc
+sudo systemctl enable ovsdb-server
+sudo systemctl start ovsdb-server
+sudo systemctl enable ovs-vswitchd
+sudo systemctl start ovs-vswitchd
+#### Cleanup
+rm -rf /home/vagrant/openvswitch-2.14.2.tar.gz /home/vagrant/dpdk-19.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
+sudo systemctl start ovsdb-server
+sudo systemctl start ovs-vswitchd
+sudo systemctl status ovsdb-server
+sudo systemctl status ovs-vswitchd
+sudo lshw -class network -businfo
+sudo ovs-vsctl --no-wait init
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="1024"
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=0x2
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
+# userspace datapath with dpdk
+sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
+sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
+sudo ovs-vsctl add-br br3 -- set bridge br3 datapath_type=netdev
+sudo ovs-vsctl add-port br3 dpdk2 -- set Interface dpdk2 type=dpdk options:dpdk-devargs=0000:00:0a.0
+#sudo ovs-vsctl add-br br4 -- set bridge br4 datapath_type=netdev
+#sudo ovs-vsctl add-port br4 dpdk3 -- set Interface dpdk3 type=dpdk options:dpdk-devargs=0000:00:10.0
+#sudo ovs-vsctl add-br br5 -- set bridge br5 datapath_type=netdev
+#sudo ovs-vsctl add-port br5 dpdk4 -- set Interface dpdk4 type=dpdk options:dpdk-devargs=0000:00:11.0
+#sudo ovs-vsctl add-br br6 -- set bridge br6 datapath_type=netdev
+#sudo ovs-vsctl add-port br6 dpdk5 -- set Interface dpdk5 type=dpdk options:dpdk-devargs=0000:00:12.0
+#sudo ovs-vsctl add-br br7 -- set bridge br7 datapath_type=netdev
+#sudo ovs-vsctl add-port br7 dpdk6 -- set Interface dpdk6 type=dpdk options:dpdk-devargs=0000:00:13.0     
+# kernel datapath
+sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
+sudo ovs-vsctl show
+sudo ip addr add 172.16.21.1/24 dev br1
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ip link set br1 up
+sudo ip addr add 172.16.22.1/24 dev br2
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br2 up
+sudo ip addr add 172.16.23.1/24 dev br3    
+sudo ovs-vsctl set int br3 mtu_request=9000
+sudo ip link set br3 up
+#sudo ovs-vsctl set int br4 mtu_request=9000
+#sudo ip link set br4 up
+#sudo ovs-vsctl set int br5 mtu_request=9000
+#sudo ip link set br5 up  
+#sudo ovs-vsctl set int br6 mtu_request=9000
+#sudo ip link set br6 up
+#sudo ovs-vsctl set int br7 mtu_request=9000
+#sudo ip link set br7 up   
+# End of scripts2
+SCRIPT
+
+$scriptl1 = <<SCRIPT
+set -e -x -u
+# Configure hugepages
+# You can later check if this change was successful with `cat /proc/meminfo`
+# Hugepages setup should be done as early as possible after boot
+echo 'vm.nr_hugepages=1024' | sudo tee /etc/sysctl.d/hugepages.conf
+sudo mount -t hugetlbfs none /dev/hugepages
+sudo sysctl -w vm.nr_hugepages=1024
+sudo cp /tmp/ovs-vswitchd.service /etc/systemd/system/ovs-vswitchd.service
+sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
+# Name of network interface provisioned for DPDK to bind
+export NET_IF1_NAME=enp0s8
+export NET_IF2_NAME=enp0s9
+sudo apt-get -qq update
+sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
+sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
+sudo pip install six
+#### Install Golang
+wget --quiet https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
+sudo tar -zxf go1.9.1.linux-amd64.tar.gz -C /usr/local/
+echo 'export GOROOT=/usr/local/go' >> /home/vagrant/.bashrc
+echo 'export GOPATH=$HOME/go' >> /home/vagrant/.bashrc
+echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> /home/vagrant/.bashrc
+source /home/vagrant/.bashrc
+mkdir -p /home/vagrant/go/src
+rm -rf /home/vagrant/go1.9.1.linux-amd64.tar.gz
+#### Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get -qq update
+sudo apt-get -qq install -y docker-ce docker-ce-cli containerd.io
+#### Download DPDK, Open vSwitch and pktgen source
+wget --quiet https://fast.dpdk.org/rel/dpdk-19.11.2.tar.xz
+sudo tar xf dpdk-19.11.2.tar.xz -C /usr/src/
+wget --quiet http://openvswitch.org/releases/openvswitch-2.14.2.tar.gz
+sudo tar -zxf openvswitch-2.14.2.tar.gz -C /usr/src/
+wget --quiet http://www.dpdk.org/browse/apps/pktgen-dpdk/snapshot/pktgen-3.4.9.tar.gz
+sudo tar -zxf pktgen-3.4.9.tar.gz -C /usr/src/
+#### Install DPDK
+echo 'export DPDK_DIR=/usr/src/dpdk-stable-19.11.2' | sudo tee -a /root/.bashrc
+echo 'export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib' | sudo tee -a /root/.bashrc
+echo 'export DPDK_TARGET=x86_64-native-linuxapp-gcc' | sudo tee -a /root/.bashrc
+echo 'export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET' | sudo tee -a /root/.bashrc
+export DPDK_DIR=/usr/src/dpdk-stable-19.11.2
+export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib
+export DPDK_TARGET=x86_64-native-linuxapp-gcc
+export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET
+cd $DPDK_DIR
+# Build and install the DPDK library
+sudo make install T=$DPDK_TARGET DESTDIR=install
+# (Optional) Export the DPDK shared library location
+sudo sed -i 's/CONFIG_RTE_BUILD_SHARED_LIB=n/CONFIG_RTE_BUILD_SHARED_LIB=y/g' ${DPDK_DIR}/config/common_base
+# Install kernel modules
+sudo modprobe uio
+sudo insmod ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+# Make uio and igb_uio installations persist across reboots
+sudo ln -sf ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko /lib/modules/`uname -r`
+sudo depmod -a
+echo "uio" | sudo tee -a /etc/modules
+echo "igb_uio" | sudo tee -a /etc/modules
+# Bind secondary network adapter
+# Note that this NIC setup does not persist across reboots
+sudo ifconfig ${NET_IF1_NAME} down
+sudo ifconfig ${NET_IF2_NAME} down
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
+#### Install Open vSwitch
+export OVS_DIR=/usr/src/openvswitch-2.14.2
+cd $OVS_DIR
+#./boot.sh
+CFLAGS='-march=native' sudo ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-dpdk=$DPDK_BUILD
+sudo make && sudo make install
+sudo mkdir -p /usr/local/etc/openvswitch
+sudo mkdir -p /usr/local/var/run/openvswitch
+sudo mkdir -p /usr/local/var/log/openvswitch
+sudo ovsdb-tool create /usr/local/etc/openvswitch/conf.db vswitchd/vswitch.ovsschema
+echo 'export PATH=$PATH:/usr/local/share/openvswitch/scripts' | sudo tee -a /root/.bashrc
+sudo systemctl enable ovsdb-server
+sudo systemctl start ovsdb-server
+sudo systemctl enable ovs-vswitchd
+sudo systemctl start ovs-vswitchd
+#### Cleanup
+rm -rf /home/vagrant/openvswitch-2.14.2.tar.gz /home/vagrant/dpdk-19.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
+sudo systemctl start ovsdb-server
+sudo systemctl start ovs-vswitchd
+sudo systemctl status ovsdb-server
+sudo systemctl status ovs-vswitchd
+sudo lshw -class network -businfo
+sudo ovs-vsctl --no-wait init
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="1024"
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=0x2
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
+# userspace datapath with dpdk
+sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
+sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
+# kernel datapath
+sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
+sudo ovs-vsctl show
+sudo ip addr add 172.16.11.2/24 dev br1
+sudo ip addr add 172.16.21.2/24 dev br2
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br1 up
+sudo ip link set br2 up
+# End of scriptl1
+SCRIPT
+
+$scriptl2 = <<SCRIPT
+set -e -x -u
+# Configure hugepages
+# You can later check if this change was successful with `cat /proc/meminfo`
+# Hugepages setup should be done as early as possible after boot
+echo 'vm.nr_hugepages=1024' | sudo tee /etc/sysctl.d/hugepages.conf
+sudo mount -t hugetlbfs none /dev/hugepages
+sudo sysctl -w vm.nr_hugepages=1024
+sudo cp /tmp/ovs-vswitchd.service /etc/systemd/system/ovs-vswitchd.service
+sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
+# Name of network interface provisioned for DPDK to bind
+export NET_IF1_NAME=enp0s8
+export NET_IF2_NAME=enp0s9
+sudo apt-get -qq update
+sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
+sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
+sudo pip install six
+#### Install Golang
+wget --quiet https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
+sudo tar -zxf go1.9.1.linux-amd64.tar.gz -C /usr/local/
+echo 'export GOROOT=/usr/local/go' >> /home/vagrant/.bashrc
+echo 'export GOPATH=$HOME/go' >> /home/vagrant/.bashrc
+echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> /home/vagrant/.bashrc
+source /home/vagrant/.bashrc
+mkdir -p /home/vagrant/go/src
+rm -rf /home/vagrant/go1.9.1.linux-amd64.tar.gz
+#### Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get -qq update
+sudo apt-get -qq install -y docker-ce docker-ce-cli containerd.io
+#### Download DPDK, Open vSwitch and pktgen source
+wget --quiet https://fast.dpdk.org/rel/dpdk-19.11.2.tar.xz
+sudo tar xf dpdk-19.11.2.tar.xz -C /usr/src/
+wget --quiet http://openvswitch.org/releases/openvswitch-2.14.2.tar.gz
+sudo tar -zxf openvswitch-2.14.2.tar.gz -C /usr/src/
+wget --quiet http://www.dpdk.org/browse/apps/pktgen-dpdk/snapshot/pktgen-3.4.9.tar.gz
+sudo tar -zxf pktgen-3.4.9.tar.gz -C /usr/src/
+#### Install DPDK
+echo 'export DPDK_DIR=/usr/src/dpdk-stable-19.11.2' | sudo tee -a /root/.bashrc
+echo 'export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib' | sudo tee -a /root/.bashrc
+echo 'export DPDK_TARGET=x86_64-native-linuxapp-gcc' | sudo tee -a /root/.bashrc
+echo 'export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET' | sudo tee -a /root/.bashrc
+export DPDK_DIR=/usr/src/dpdk-stable-19.11.2
+export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib
+export DPDK_TARGET=x86_64-native-linuxapp-gcc
+export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET
+cd $DPDK_DIR
+# Build and install the DPDK library
+sudo make install T=$DPDK_TARGET DESTDIR=install
+# (Optional) Export the DPDK shared library location
+sudo sed -i 's/CONFIG_RTE_BUILD_SHARED_LIB=n/CONFIG_RTE_BUILD_SHARED_LIB=y/g' ${DPDK_DIR}/config/common_base
+# Install kernel modules
+sudo modprobe uio
+sudo insmod ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+# Make uio and igb_uio installations persist across reboots
+sudo ln -sf ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko /lib/modules/`uname -r`
+sudo depmod -a
+echo "uio" | sudo tee -a /etc/modules
+echo "igb_uio" | sudo tee -a /etc/modules
+# Bind secondary network adapter
+# Note that this NIC setup does not persist across reboots
+sudo ifconfig ${NET_IF1_NAME} down
+sudo ifconfig ${NET_IF2_NAME} down
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
+#### Install Open vSwitch
+export OVS_DIR=/usr/src/openvswitch-2.14.2
+cd $OVS_DIR
+#./boot.sh
+CFLAGS='-march=native' sudo ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-dpdk=$DPDK_BUILD
+sudo make && sudo make install
+sudo mkdir -p /usr/local/etc/openvswitch
+sudo mkdir -p /usr/local/var/run/openvswitch
+sudo mkdir -p /usr/local/var/log/openvswitch
+sudo ovsdb-tool create /usr/local/etc/openvswitch/conf.db vswitchd/vswitch.ovsschema
+echo 'export PATH=$PATH:/usr/local/share/openvswitch/scripts' | sudo tee -a /root/.bashrc
+sudo systemctl enable ovsdb-server
+sudo systemctl start ovsdb-server
+sudo systemctl enable ovs-vswitchd
+sudo systemctl start ovs-vswitchd
+#### Cleanup
+rm -rf /home/vagrant/openvswitch-2.14.2.tar.gz /home/vagrant/dpdk-19.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
+sudo systemctl start ovsdb-server
+sudo systemctl start ovs-vswitchd
+sudo systemctl status ovsdb-server
+sudo systemctl status ovs-vswitchd
+sudo lshw -class network -businfo
+sudo ovs-vsctl --no-wait init
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="1024"
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=0x2
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
+# userspace datapath with dpdk
+sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
+sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
+# kernel datapath
+sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
+sudo ovs-vsctl show
+sudo ip addr add 172.16.12.2/24 dev br1
+sudo ip addr add 172.16.22.2/24 dev br2  
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br1 up
+sudo ip link set br2 up
+# End of scriptl2
+SCRIPT
+  
+$scriptl3 = <<SCRIPT
+set -e -x -u
+# Configure hugepages
+# You can later check if this change was successful with `cat /proc/meminfo`
+# Hugepages setup should be done as early as possible after boot
+echo 'vm.nr_hugepages=1024' | sudo tee /etc/sysctl.d/hugepages.conf
+sudo mount -t hugetlbfs none /dev/hugepages
+sudo sysctl -w vm.nr_hugepages=1024
+sudo cp /tmp/ovs-vswitchd.service /etc/systemd/system/ovs-vswitchd.service
+sudo cp /tmp/ovsdb-server.service /etc/systemd/system/ovsdb-server.service
+# Name of network interface provisioned for DPDK to bind
+export NET_IF1_NAME=enp0s8
+export NET_IF2_NAME=enp0s9
+sudo apt-get -qq update
+sudo apt-get -y -qq install vim git clang doxygen hugepages build-essential libnuma-dev libpcap-dev linux-headers-`uname -r` dh-autoreconf libssl-dev libcap-ng-dev openssl python python-pip htop
+sudo apt-get -y -qq install apt-transport-https ca-certificates curl gnupg lsb-release
+sudo pip install six
+#### Install Golang
+wget --quiet https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
+sudo tar -zxf go1.9.1.linux-amd64.tar.gz -C /usr/local/
+echo 'export GOROOT=/usr/local/go' >> /home/vagrant/.bashrc
+echo 'export GOPATH=$HOME/go' >> /home/vagrant/.bashrc
+echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> /home/vagrant/.bashrc
+source /home/vagrant/.bashrc
+mkdir -p /home/vagrant/go/src
+rm -rf /home/vagrant/go1.9.1.linux-amd64.tar.gz
+#### Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get -qq update
+sudo apt-get -qq install -y docker-ce docker-ce-cli containerd.io
+#### Download DPDK, Open vSwitch and pktgen source
+wget --quiet https://fast.dpdk.org/rel/dpdk-19.11.2.tar.xz
+sudo tar xf dpdk-19.11.2.tar.xz -C /usr/src/
+wget --quiet http://openvswitch.org/releases/openvswitch-2.14.2.tar.gz
+sudo tar -zxf openvswitch-2.14.2.tar.gz -C /usr/src/
+wget --quiet http://www.dpdk.org/browse/apps/pktgen-dpdk/snapshot/pktgen-3.4.9.tar.gz
+sudo tar -zxf pktgen-3.4.9.tar.gz -C /usr/src/
+#### Install DPDK
+echo 'export DPDK_DIR=/usr/src/dpdk-stable-19.11.2' | sudo tee -a /root/.bashrc
+echo 'export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib' | sudo tee -a /root/.bashrc
+echo 'export DPDK_TARGET=x86_64-native-linuxapp-gcc' | sudo tee -a /root/.bashrc
+echo 'export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET' | sudo tee -a /root/.bashrc
+export DPDK_DIR=/usr/src/dpdk-stable-19.11.2
+export LD_LIBRARY_PATH=$DPDK_DIR/x86_64-native-linuxapp-gcc/lib
+export DPDK_TARGET=x86_64-native-linuxapp-gcc
+export DPDK_BUILD=$DPDK_DIR/$DPDK_TARGET
+cd $DPDK_DIR
+# Build and install the DPDK library
+sudo make install T=$DPDK_TARGET DESTDIR=install
+# (Optional) Export the DPDK shared library location
+sudo sed -i 's/CONFIG_RTE_BUILD_SHARED_LIB=n/CONFIG_RTE_BUILD_SHARED_LIB=y/g' ${DPDK_DIR}/config/common_base
+# Install kernel modules
+sudo modprobe uio
+sudo insmod ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+# Make uio and igb_uio installations persist across reboots
+sudo ln -sf ${DPDK_DIR}/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko /lib/modules/`uname -r`
+sudo depmod -a
+echo "uio" | sudo tee -a /etc/modules
+echo "igb_uio" | sudo tee -a /etc/modules
+# Bind secondary network adapter
+# Note that this NIC setup does not persist across reboots
+sudo ifconfig ${NET_IF1_NAME} down
+sudo ifconfig ${NET_IF2_NAME} down
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF1_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --bind=igb_uio ${NET_IF2_NAME}
+sudo ${DPDK_DIR}/usertools/dpdk-devbind.py --status
+#### Install Open vSwitch
+export OVS_DIR=/usr/src/openvswitch-2.14.2
+cd $OVS_DIR
+#./boot.sh
+CFLAGS='-march=native' sudo ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-dpdk=$DPDK_BUILD
+sudo make && sudo make install
+sudo mkdir -p /usr/local/etc/openvswitch
+sudo mkdir -p /usr/local/var/run/openvswitch
+sudo mkdir -p /usr/local/var/log/openvswitch
+sudo ovsdb-tool create /usr/local/etc/openvswitch/conf.db vswitchd/vswitch.ovsschema
+echo 'export PATH=$PATH:/usr/local/share/openvswitch/scripts' | sudo tee -a /root/.bashrc
+sudo systemctl enable ovsdb-server
+sudo systemctl start ovsdb-server
+sudo systemctl enable ovs-vswitchd
+sudo systemctl start ovs-vswitchd
+#### Cleanup
+rm -rf /home/vagrant/openvswitch-2.14.2.tar.gz /home/vagrant/dpdk-19.11.2.tar.xz /home/vagrant/go1.9.1.linux-amd64.tar.gz /home/vagrant/pktgen-3.4.9.tar.gz
+sudo systemctl start ovsdb-server
+sudo systemctl start ovs-vswitchd
+sudo systemctl status ovsdb-server
+sudo systemctl status ovs-vswitchd
+sudo lshw -class network -businfo
+sudo ovs-vsctl --no-wait init
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-socket-mem="1024"
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:pmd-cpu-mask=0x2
+sudo ovs-vsctl --no-wait set Open_vSwitch . other_config:max-idle=30000
+# userspace datapath with dpdk
+sudo ovs-vsctl add-br br1 -- set bridge br1 datapath_type=netdev
+sudo ovs-vsctl add-port br1 dpdk0 -- set Interface dpdk0 type=dpdk options:dpdk-devargs=0000:00:08.0
+sudo ovs-vsctl add-br br2 -- set bridge br2 datapath_type=netdev
+sudo ovs-vsctl add-port br2 dpdk1 -- set Interface dpdk1 type=dpdk options:dpdk-devargs=0000:00:09.0
+# kernel datapath
+sudo ovs-vsctl add-br br0 -- set bridge br0 datapath_type=system
+sudo ovs-vsctl show
+sudo ip addr add 172.16.13.2/24 dev br1
+sudo ip addr add 172.16.23.2/24 dev br2  
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br1 up
+sudo ip link set br2 up
+# End of scriptl3
+SCRIPT
+  
+Vagrant.configure("2") do |config|
+  config.vm.define "s1" do |s1|
+      s1.vm.box = "unf"
+      s1.vm.hostname = "S1"
+      s1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      s1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      s1.vm.provision "shell", privileged: false, inline: $scripts1
+      s1.vm.network "private_network", ip: "172.16.11.1", virtualbox_intnet: "s1l1"
+      s1.vm.network "private_network", ip: "172.16.12.1", virtualbox_intnet: "s1l2"
+      s1.vm.network "private_network", ip: "172.16.13.1", virtualbox_intnet: "s1l3"
+      s1.vm.provider :virtualbox do |vbox|
+            vbox.name = "S1"
+            vbox.customize ["modifyvm", :id, "--cpus", 2]
+            vbox.customize ["modifyvm", :id, "--memory", 8192]
+            vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
+            vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype4', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']        
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+      end # end provider
+      s1.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      s1.vm.provision "shell", path: "cnet_provisioning"
+  end
+  config.vm.define "s2" do |s2|
+      s2.vm.box = "unf"
+      s2.vm.hostname = "S2"
+      s2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      s2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      s2.vm.provision "shell", privileged: false, inline: $scripts2
+      s2.vm.network "private_network", ip: "172.16.21.1", virtualbox_intnet: "s2l1"
+      s2.vm.network "private_network", ip: "172.16.22.1", virtualbox_intnet: "s2l2"
+      s2.vm.network "private_network", ip: "172.16.23.1", virtualbox_intnet: "s2l3"    
+      s2.vm.provider :virtualbox do |vbox|
+            vbox.name = "S2"
+            vbox.customize ["modifyvm", :id, "--cpus", 2]
+            vbox.customize ["modifyvm", :id, "--memory", 8192]
+            vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
+            vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype4', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']        
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+      end # end provider
+      s2.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      s2.vm.provision "shell", path: "cnet_provisioning"
+  end
+  config.vm.define "l1" do |l1|
+      l1.vm.box = "unf"
+      l1.vm.hostname = "L1"
+      l1.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      l1.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      l1.vm.provision "shell", privileged: false, inline: $scriptl1
+      l1.vm.network "private_network", ip: "172.16.11.2", virtualbox_intnet: "s1l1"
+      l1.vm.network "private_network", ip: "172.16.21.2", virtualbox_intnet: "s2l1"
+      l1.vm.provider :virtualbox do |vbox|
+            vbox.name = "L1"
+            vbox.customize ["modifyvm", :id, "--cpus", 8]
+            vbox.customize ["modifyvm", :id, "--memory", 32768]
+            vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
+            vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+      end
+      l1.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      l1.vm.provision "shell", path: "cnet_provisioning"
+  end
+  config.vm.define "l2" do |l2|
+      l2.vm.box = "unf"
+      l2.vm.hostname = "L2"
+      l2.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      l2.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      l2.vm.provision "shell", privileged: false, inline: $scriptl2
+      l2.vm.network "private_network", ip: "172.16.12.2", virtualbox_intnet: "s1l2"
+      l2.vm.network "private_network", ip: "172.16.22.2", virtualbox_intnet: "s2l2"
+      l2.vm.provider :virtualbox do |vbox|
+            vbox.name = "L2"
+            vbox.customize ["modifyvm", :id, "--cpus", 8]
+            vbox.customize ["modifyvm", :id, "--memory", 32768]
+            vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
+            vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+      end
+      l2.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      l2.vm.provision "shell", path: "cnet_provisioning"
+  end
+  config.vm.define "l3" do |l3|
+      l3.vm.box = "unf"
+      l3.vm.hostname = "L3"
+      l3.vm.provision "file", source: "systemctl/ovs-vswitchd.service", destination: "/tmp/ovs-vswitchd.service"
+      l3.vm.provision "file", source: "systemctl/ovsdb-server.service", destination: "/tmp/ovsdb-server.service"
+      l3.vm.provision "shell", privileged: false, inline: $scriptl3
+      l3.vm.network "private_network", ip: "172.16.13.2", virtualbox_intnet: "s1l3"
+      l3.vm.network "private_network", ip: "172.16.23.2", virtualbox_intnet: "s2l3"
+      l3.vm.provider :virtualbox do |vbox|
+            vbox.name = "L3"
+            vbox.customize ["modifyvm", :id, "--cpus", 8]
+            vbox.customize ["modifyvm", :id, "--memory", 32768]
+            vbox.customize ["modifyvm", :id, "--chipset", "ich9"]
+            vbox.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+            vbox.customize ['modifyvm', :id, '--nictype2', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+            vbox.customize ['modifyvm', :id, '--nictype3', '82545EM']
+            vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
+            vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
+      end
+      l3.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      l3.vm.provision "shell", path: "cnet_provisioning"
+  end  
+end
