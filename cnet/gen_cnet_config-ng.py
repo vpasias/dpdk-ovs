@@ -20,6 +20,24 @@ interface {{ interface }}
  ip ospf dead-interval 40
 !
 {% endfor %}
+{% for interface in sto_interfaces %}
+interface {{ interface }}
+ ip ospf area 1
+ ip ospf network point-to-point
+ ip ospf bfd
+ ip ospf hello-interval 10
+ ip ospf dead-interval 40
+!
+{% endfor %}
+{% for interface in clu_interfaces %}
+interface {{ interface }}
+ ip ospf area 2
+ ip ospf network point-to-point
+ ip ospf bfd
+ ip ospf hello-interval 10
+ ip ospf dead-interval 40
+!
+{% endfor %}
 interface lo
  ip ospf area 0
 !
@@ -65,10 +83,10 @@ vrf vrf_cust2
  vni 4001
  exit-vrf
 !
-ip route 172.16.251.0/24 br3
-ip route 172.16.251.0/24 br4
-ip route 172.16.252.0/24 br5
-ip route 172.16.252.0/24 br6
+vrf vrf_cust3
+ vni 4002
+ exit-vrf
+!
 router bgp 65010
  bgp router-id {{ local_loopback }}
  coalesce-time 1000
@@ -107,6 +125,15 @@ router bgp 65010 vrf vrf_cust2
   redistribute connected
  exit-address-family
  !
+router bgp 65010 vrf vrf_cust3
+ address-family l2vpn evpn
+  advertise ipv4 unicast
+ exit-address-family
+!
+ address-family ipv4 unicast
+  redistribute connected
+ exit-address-family
+ ! 
 !
 {% endif %}
 router ospf
@@ -124,6 +151,20 @@ mpls_int_map = {
     'L1': ['br1', 'br2'],
     'L2': ['br1', 'br2'],
     'L3': ['br1', 'br2']
+    }
+sto_int_map = {
+    'A1': ['br1', 'br2', 'br3'],
+    'A2': ['br1', 'br2', 'br3'],
+    'L1': ['br3', 'br4'],
+    'L2': ['br3', 'br4'],
+    'L3': ['br3', 'br4']
+    }
+clu_int_map = {
+    'C1': ['br1', 'br2', 'br3'],
+    'C2': ['br1', 'br2', 'br3'],
+    'L1': ['br5', 'br6'],
+    'L2': ['br5', 'br6'],
+    'L3': ['br5', 'br6']
     }
 
 def prepend_octet(octet):
@@ -146,6 +187,8 @@ with open('/etc/hostname', 'r', encoding='utf-8') as infile:
     router_hostname = infile.read().strip()
 
 mpls_interfaces = mpls_int_map[router_hostname]
+sto_interfaces = sto_int_map[router_hostname]
+clu_interfaces = clu_int_map[router_hostname]
 rr_router = True if 'S' in router_hostname else False
 edge_router = True if 'L' in router_hostname else False
 
@@ -209,6 +252,8 @@ if edge_router:
     rendered = template.render(frr_version=frr_version,
                                router_hostname=router_hostname,
                                mpls_interfaces=mpls_interfaces,
+                               sto_interfaces=sto_interfaces,
+                               clu_interfaces=clu_interfaces,
                                edge_router=edge_router,
                                local_loopback=local_loopback.compressed,
                                rr1_loopback=rr1_loopback,
