@@ -296,6 +296,62 @@ sudo ovs-vsctl set int br3 mtu_request=9000
 sudo ip link set br3 up
 # End of scripts2  
 SCRIPT
+
+$scripta1 = <<SCRIPT
+set -e -x -u
+sudo ip addr add 172.18.11.1/24 dev br1
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ip link set br1 up
+sudo ip addr add 172.18.12.1/24 dev br2
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br2 up
+sudo ip addr add 172.18.13.1/24 dev br3  
+sudo ovs-vsctl set int br3 mtu_request=9000
+sudo ip link set br3 up
+# End of scripta1  
+SCRIPT
+
+$scripta2 = <<SCRIPT
+set -e -x -u
+sudo ip addr add 172.18.21.1/24 dev br1
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ip link set br1 up
+sudo ip addr add 172.18.22.1/24 dev br2
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br2 up
+sudo ip addr add 172.18.23.1/24 dev br3  
+sudo ovs-vsctl set int br3 mtu_request=9000
+sudo ip link set br3 up
+# End of scripta2  
+SCRIPT
+
+$scriptc1 = <<SCRIPT
+set -e -x -u
+sudo ip addr add 172.19.11.1/24 dev br1
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ip link set br1 up
+sudo ip addr add 172.19.12.1/24 dev br2
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br2 up
+sudo ip addr add 172.19.13.1/24 dev br3  
+sudo ovs-vsctl set int br3 mtu_request=9000
+sudo ip link set br3 up
+# End of scriptc1  
+SCRIPT
+
+$scriptc2 = <<SCRIPT
+set -e -x -u
+sudo ip addr add 172.18.21.1/24 dev br1
+sudo ovs-vsctl set int br1 mtu_request=9000
+sudo ip link set br1 up
+sudo ip addr add 172.18.22.1/24 dev br2
+sudo ovs-vsctl set int br2 mtu_request=9000
+sudo ip link set br2 up
+sudo ip addr add 172.18.23.1/24 dev br3  
+sudo ovs-vsctl set int br3 mtu_request=9000
+sudo ip link set br3 up
+# End of scriptc2  
+SCRIPT
   
 $scriptl1 = <<SCRIPT
 set -e -x -u
