@@ -456,7 +456,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      s1.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      s1.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       s1.vm.provision "shell", path: "cnet_provisioning-ng"
   end
 # Base Spine Switch 2  
@@ -485,7 +485,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      s2.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      s2.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       s2.vm.provision "shell", path: "cnet_provisioning-ng"
   end
 ### Storage Spine Switches
@@ -515,7 +515,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      a1.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      a1.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       a1.vm.provision "shell", path: "cnet_provisioning-ng"
   end
 # Storage Spine Switch 2  
@@ -544,7 +544,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      a2.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      a2.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       a2.vm.provision "shell", path: "cnet_provisioning-ng"
   end
 ### Cluster Spine Switches
@@ -574,7 +574,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      c1.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      c1.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       c1.vm.provision "shell", path: "cnet_provisioning-ng"
   end
 # Cluster Spine Switch 2  
@@ -603,7 +603,7 @@ Vagrant.configure("2") do |config|
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.1", "1"]
             vbox.customize ["setextradata", :id, "VBoxInternal/CPUM/SSE4.2", "1"]
       end # end provider
-      c2.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      c2.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       c2.vm.provision "shell", path: "cnet_provisioning-ng"
   end  
 ### Leaf Switches
@@ -653,7 +653,7 @@ Vagrant.configure("2") do |config|
             end
             vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
       end
-      l1.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      l1.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       l1.vm.provision "shell", path: "cnet_provisioning-ng"
   end
 # Leaf Switch 2  
@@ -702,7 +702,7 @@ Vagrant.configure("2") do |config|
             end
             vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]        
       end
-      l2.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      l2.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       l2.vm.provision "shell", path: "cnet_provisioning-ng"
   end
 # Leaf Switch 3  
@@ -751,7 +751,7 @@ Vagrant.configure("2") do |config|
             end
             vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]        
       end
-      l3.vm.provision "file", source: "gen_cnet_config.py", destination: "gen_cnet_config.py"
+      l3.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       l3.vm.provision "shell", path: "cnet_provisioning-ng"
   end  
 end
