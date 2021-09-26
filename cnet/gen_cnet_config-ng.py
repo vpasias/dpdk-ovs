@@ -254,6 +254,8 @@ if rr_router:
    mpls_interfaces = mpls_int_map[router_hostname]
 if edge_router:
    mpls_interfaces = mpls_int_map[router_hostname]
+   sto_interfaces = sto_int_map[router_hostname]
+   clu_interfaces = clu_int_map[router_hostname]
 
 loopback_addr_run = subprocess.run(['ip', '-br', 'address', 'show', 'lo'],
                                    stdout=subprocess.PIPE)
