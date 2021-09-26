@@ -646,12 +646,12 @@ Vagrant.configure("2") do |config|
             unless File.exist?(file_to_disk)
               vbox.customize ['createhd', '--filename', file_to_disk, '--size', 120 * 1024]
             end
-            vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+            vbox.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
             file_to_disk = 'sdc-l1.vdi'
             unless File.exist?(file_to_disk)
               vbox.customize ['createhd', '--filename', file_to_disk, '--size', 120 * 1024]
             end
-            vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+            vbox.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
       end
       l1.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       l1.vm.provision "shell", path: "cnet_provisioning-ng"
@@ -695,12 +695,12 @@ Vagrant.configure("2") do |config|
             unless File.exist?(file_to_disk)
               vbox.customize ['createhd', '--filename', file_to_disk, '--size', 120 * 1024]
             end
-            vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+            vbox.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
             file_to_disk = 'sdc-l2.vdi'
             unless File.exist?(file_to_disk)
               vbox.customize ['createhd', '--filename', file_to_disk, '--size', 120 * 1024]
             end
-            vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]        
+            vbox.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]        
       end
       l2.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       l2.vm.provision "shell", path: "cnet_provisioning-ng"
@@ -744,12 +744,12 @@ Vagrant.configure("2") do |config|
             unless File.exist?(file_to_disk)
               vbox.customize ['createhd', '--filename', file_to_disk, '--size', 120 * 1024]
             end
-            vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+            vbox.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
             file_to_disk = 'sdc-l3.vdi'
             unless File.exist?(file_to_disk)
               vbox.customize ['createhd', '--filename', file_to_disk, '--size', 120 * 1024]
             end
-            vbox.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]        
+            vbox.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 3, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]        
       end
       l3.vm.provision "file", source: "gen_cnet_config-ng.py", destination: "gen_cnet_config-ng.py"
       l3.vm.provision "shell", path: "cnet_provisioning-ng"
