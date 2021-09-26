@@ -11,7 +11,6 @@ log syslog informational
 service integrated-vtysh-config
 username iason nopassword
 !
-{% if rr_router %}
 {% for interface in mpls_interfaces %}
 interface {{ interface }}
  ip ospf area 0
@@ -21,19 +20,6 @@ interface {{ interface }}
  ip ospf dead-interval 40
 !
 {% endfor %}
-{% endif %}
-{% if edge_router %}
-{% for interface in mpls_interfaces %}
-interface {{ interface }}
- ip ospf area 0
- ip ospf network point-to-point
- ip ospf bfd
- ip ospf hello-interval 10
- ip ospf dead-interval 40
-!
-{% endfor %}
-{% endif %}
-{% if sto_router %}
 {% for interface in sto_interfaces %}
 interface {{ interface }}
  ip ospf area 1
@@ -43,8 +29,6 @@ interface {{ interface }}
  ip ospf dead-interval 40
 !
 {% endfor %}
-{% endif %}
-{% if clu_router %}
 {% for interface in clu_interfaces %}
 interface {{ interface }}
  ip ospf area 2
@@ -54,7 +38,6 @@ interface {{ interface }}
  ip ospf dead-interval 40
 !
 {% endfor %}
-{% endif %}
 {% if sto_router %}
 interface lo
  ip ospf area 1
