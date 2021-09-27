@@ -341,13 +341,13 @@ SCRIPT
 
 $scriptc2 = <<SCRIPT
 set -e -x -u
-sudo ip addr add 172.18.21.1/24 dev br1
+sudo ip addr add 172.19.21.1/24 dev br1
 sudo ovs-vsctl set int br1 mtu_request=9000
 sudo ip link set br1 up
-sudo ip addr add 172.18.22.1/24 dev br2
+sudo ip addr add 172.19.22.1/24 dev br2
 sudo ovs-vsctl set int br2 mtu_request=9000
 sudo ip link set br2 up
-sudo ip addr add 172.18.23.1/24 dev br3  
+sudo ip addr add 172.19.23.1/24 dev br3  
 sudo ovs-vsctl set int br3 mtu_request=9000
 sudo ip link set br3 up
 # End of scriptc2  
