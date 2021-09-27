@@ -112,7 +112,7 @@ if [[ !("$router_type" =~ "n") ]]; then
     sudo usermod -a -G frr vagrant
     sudo usermod -a -G frrvty vagrant
     sudo systemctl start frr.service
-    sudo systemctl restart frr.service
+    sudo systemctl status frr.service
 else
     n_address=$(ip -br -4 address show eth1)
     IFS=' ' read -ra addr <<< "$n_address"
