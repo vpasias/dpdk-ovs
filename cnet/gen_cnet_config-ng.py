@@ -295,7 +295,6 @@ if edge_router:
                                router_hostname=router_hostname,
                                mpls_interfaces=mpls_interfaces,
                                sto_interfaces=sto_interfaces,
-                               clu_interfaces=clu_interfaces,
                                edge_router=edge_router,
                                local_loopback=local_loopback.compressed,
                                rr1_loopback=rr1_loopback,
