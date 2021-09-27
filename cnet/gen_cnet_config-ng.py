@@ -90,9 +90,6 @@ interface lo
 interface slo
  ip ospf area 1
 !
-interface clo
- ip ospf area 2
-!
 vrf vrf_cust1
  vni 4000
  exit-vrf
@@ -158,9 +155,10 @@ router ospf
  network 172.16.0.0/16 area 0
  area 1 nssa
  network 172.18.0.0/16 area 1
- area 2 nssa
- network 172.19.0.0/16 area 2
  router-info area
+!
+ip route 172.19.0.0/16 br5
+ip route 172.19.0.0/16 br6
 !
 {% endif %}
 {% if sto_router %}
@@ -199,10 +197,7 @@ sto_int_map = {
     }
 clu_int_map = {
     'C1': ['br1', 'br2', 'br3'],
-    'C2': ['br1', 'br2', 'br3'],
-    'L1': ['br5', 'br6'],
-    'L2': ['br5', 'br6'],
-    'L3': ['br5', 'br6']
+    'C2': ['br1', 'br2', 'br3']
     }
 
 def prepend_octet(octet):
@@ -238,7 +233,6 @@ if rr_router:
 if edge_router:
    mpls_interfaces = mpls_int_map[router_hostname]
    sto_interfaces = sto_int_map[router_hostname]
-   clu_interfaces = clu_int_map[router_hostname]
 
 loopback_addr_run = subprocess.run(['ip', '-br', 'address', 'show', 'lo'],
                                    stdout=subprocess.PIPE)
