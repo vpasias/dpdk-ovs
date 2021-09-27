@@ -182,6 +182,8 @@ if [[ "$router_type" =~ "l" ]]; then
     sudo ip link set br300 master vrf_cust3
     sudo ip link set br4002 master vrf_cust3
     sudo apt update -y && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y iperf iperf3 mtr traceroute netcat
+    sudo apt -y install glusterfs-server
+    sudo systemctl enable glusterd
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y install qemu-kvm libvirt-bin virtinst libosinfo-bin libguestfs-tools virt-top genisoimage net-tools bash-completion python-pip libvirt-daemon-system virt-manager libnss-libvirt libvirt-clients osinfo-db-tools intltool sshpass ovmf --no-install-recommends
     sudo sed -i 's/hosts:          files dns/hosts:          files libvirt libvirt_guest dns/' /etc/nsswitch.conf && sudo lsmod | grep kvm && sudo systemctl restart libvirtd
 fi
